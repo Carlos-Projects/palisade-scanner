@@ -1,4 +1,6 @@
+import asyncio
 import time
+from pathlib import Path
 
 from bs4 import BeautifulSoup
 
@@ -46,9 +48,13 @@ class PipelineOrchestrator:
         return await self._scan(soup, content)
 
     async def scan_file(self, path: str) -> ScanReport:
+        resolved = Path(path).resolve()
+        safe = Path(self.s.scan_dir or ".").resolve()
+        if safe not in resolved.parents and resolved != safe:
+            raise ValueError(f"Path traversal blocked: {path}")
         ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
         loader_key = "pdf" if ext == "pdf" else "html"
-        content, soup = await self.loaders[loader_key].load(path)
+        content, soup = await self.loaders[loader_key].load(str(resolved))
         return await self._scan(soup, content)
 
     async def scan_paste(self, raw: str) -> ScanReport:
@@ -66,19 +72,25 @@ class PipelineOrchestrator:
 
         # Phase 1: Run pattern-based detectors
         pattern_detectors = [d for d in self.detectors if d.name != "instruction_classifier"]
-        for detector in pattern_detectors:
+
+        async def _run_detector(detector):
             try:
-                findings = await detector.detect(soup, source_url)
-                all_findings.extend(findings)
+                return await detector.detect(soup, source_url)
             except Exception as e:
-                all_findings.append(Finding(
+                return [Finding(
                     detector=detector.name,
                     severity="info",
                     confidence=0.0,
                     title=f"Detector error: {detector.name}",
                     description=str(e),
                     category="system_error",
-                ))
+                )]
+
+        results = await asyncio.gather(*[_run_detector(d) for d in pattern_detectors], return_exceptions=True)
+        for r in results:
+            if isinstance(r, Exception):
+                continue
+            all_findings.extend(r)
 
         # Phase 2: Run LLM classifier on findings (if configured)
         llm_detector = next(

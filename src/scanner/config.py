@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     debug: bool = False
     data_dir: Path = Path.home() / ".pis"
 
+    scan_dir: str = "."  # safe directory for file scanning; "." = current working dir
     scan_default_timeout_ms: int = 30_000
     scan_max_urls_batch: int = 100
 

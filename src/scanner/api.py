@@ -65,6 +65,8 @@ async def scan_url(
     elif paste:
         report = await orchestrator.scan_paste(paste)
     elif file_path:
+        if "/" in file_path.lstrip("./") or ".." in file_path:
+            return HTMLResponse("<div class='error'>Path traversal blocked: only filenames allowed.</div>")
         report = await orchestrator.scan_file(file_path)
     else:
         return HTMLResponse("<div class='error'>Provide a URL, file path, or pasted text.</div>")
