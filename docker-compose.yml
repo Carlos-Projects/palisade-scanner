@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  scanner:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PIS_LLM_API_KEY=${PIS_LLM_API_KEY:-}
+      - PIS_LLM_PROVIDER=${PIS_LLM_PROVIDER:-openai}
+      - PIS_LLM_MODEL=${PIS_LLM_MODEL:-gpt-4o-mini}
+      - PIS_DEBUG=${PIS_DEBUG:-false}
+      - PIS_WEB_HOST=0.0.0.0
+    volumes:
+      - ./src:/app/src
+      - ./frontend:/app/frontend
+      - pis_data:/root/.pis
+    restart: unless-stopped
+
+  # Optional: Playwright service for JS rendering
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.44.0-jammy
+    profiles:
+      - full
+    command: sleep infinity
+    volumes:
+      - ./src:/app/src
+
+volumes:
+  pis_data:

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Injection Scanner</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f1117;
+            color: #e1e4e8;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(135deg, #58a6ff, #bc8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+        .scan-form {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #0d1117;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .tab-btn.active {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: #fff;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .input-group input, .input-group textarea {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #0d1117;
+            color: #e1e4e8;
+            font-size: 0.9rem;
+        }
+        .input-group textarea {
+            min-height: 100px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: #238636;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #2ea043; }
+        .btn-secondary {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+        .btn-secondary:hover { background: #30363d; }
+
+        #results { margin-top: 2rem; }
+        .score-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .score-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: inline;
+        }
+        .score-total { font-size: 1rem; color: #8b949e; }
+        .score-label { font-size: 1.2rem; font-weight: 600; margin: 0.25rem 0; }
+        .score-meta { color: #8b949e; font-size: 0.85rem; }
+        .summary {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .finding {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+        .finding-header {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid #30363d;
+        }
+        .badge {
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-critical { background: #da3633; color: #fff; }
+        .badge-high { background: #d29922; color: #000; }
+        .badge-medium { background: #1f6feb; color: #fff; }
+        .badge-low { background: #238636; color: #fff; }
+        .badge-info { background: #484f58; color: #fff; }
+        .detector { color: #8b949e; font-size: 0.8rem; margin-left: auto; }
+        .finding-body { padding: 0.75rem 1rem; }
+        .finding-body p { margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .snippet {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            font-family: monospace;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .recommendation {
+            color: #58a6ff;
+            font-size: 0.85rem;
+        }
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .loading { text-align: center; padding: 2rem; color: #8b949e; }
+    </style>
+</head>
+<body>
+    <h1>Prompt Injection Scanner</h1>
+    <p class="subtitle">Analyze URLs, pages, and text for adversarial content targeting AI agents</p>
+
+    <div class="scan-form">
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('url')">URL</button>
+            <button class="tab-btn" onclick="switchTab('paste')">Paste</button>
+            <button class="tab-btn" onclick="switchTab('file')">File</button>
+        </div>
+
+        <form id="scan-form" hx-post="/scan" hx-target="#results" hx-indicator="#loading">
+            <div id="tab-url" class="tab-pane active">
+                <div class="input-group">
+                    <input type="url" name="url" placeholder="https://example.com" autofocus>
+                    <button type="submit" class="btn btn-primary">Scan</button>
+                </div>
+            </div>
+            <div id="tab-paste" class="tab-pane">
+                <div class="input-group" style="flex-direction: column;">
+                    <textarea name="paste" placeholder="Paste HTML or text content here..."></textarea>
+                    <button type="submit" class="btn btn-primary" style="align-self: flex-end;">Scan</button>
+                </div>
+            </div>
+            <div id="tab-file" class="tab-pane">
+                <div class="input-group">
+                    <input type="text" name="file_path" placeholder="/path/to/file.html or .pdf">
+                    <button type="submit" class="btn btn-primary">Scan</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;">
+        Scanning... this may take a moment.
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function switchTab(name) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + name).classList.add('active');
+            document.querySelector(`.tab-btn[onclick*="'${name}'"]`).classList.add('active');
+        }
+
+        document.body.addEventListener('htmx:beforeRequest', function() {
+            document.getElementById('loading').style.display = 'block';
+        });
+        document.body.addEventListener('htmx:afterRequest', function() {
+            document.getElementById('loading').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

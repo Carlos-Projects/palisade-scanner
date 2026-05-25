@@ -1,0 +1,104 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "palisade-scanner"
+version = "0.1.0"
+description = "Scan web content for prompt injection, hidden instructions, and adversarial content targeting AI agents"
+authors = [
+    { name = "Carlos Rocha", email = "carlos@carlosrocha.dev" },
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = [
+    "prompt-injection", "ai-safety", "llm-security", "agent-security",
+    "adversarial", "jailbreak-detection", "content-security", "ai-agents",
+    "web-security", "palisade",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "httpx>=0.27",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "typer>=0.12",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+    "orjson>=3.9",
+    "apscheduler>=3.10",
+]
+
+[project.optional-dependencies]
+web = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-multipart>=0.0.9",
+]
+playwright = [
+    "playwright>=1.44",
+    "pillow>=10.0",
+]
+llm = [
+    "openai>=1.30",
+    "anthropic>=0.30",
+]
+pdf = [
+    "pymupdf>=1.24",
+]
+reports = [
+    "weasyprint>=62",
+    "plotly>=5.20",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-httpx>=0.30",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+]
+all = [
+    "palisade-scanner[web,playwright,llm,pdf,reports,dev]",
+]
+
+[project.scripts]
+pis = "scanner.cli:app"
+palisade = "scanner.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scanner"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["tests/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "ARG"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
