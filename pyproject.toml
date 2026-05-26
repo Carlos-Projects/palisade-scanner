@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "palisade-scanner"
-version = "0.1.1"
+version = "0.1.2"
 description = "Scan web content for prompt injection, hidden instructions, and adversarial content targeting AI agents"
 authors = [
     { name = "Carlos Rocha", email = "carlos@carlosrocha.dev" },
