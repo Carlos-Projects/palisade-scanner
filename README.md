@@ -4,6 +4,9 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![CI](https://github.com/Carlos-Projects/palisade-scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlos-Projects/palisade-scanner/actions)
+[![HuggingFace Space](https://img.shields.io/badge/🤗%20Try%20it%20now-HF%20Spaces-yellow)](https://huggingface.co/spaces/Syntho/palisade-scanner)
+
+**[Try it live on HuggingFace Spaces](https://huggingface.co/spaces/Syntho/palisade-scanner)** — scan any URL without installing anything.
 
 **Scan web content for prompt injection, hidden instructions, and adversarial content targeting AI agents.**
 
