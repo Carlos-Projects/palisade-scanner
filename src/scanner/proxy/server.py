@@ -1,7 +1,7 @@
 import logging
 
 import uvicorn
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from scanner.config import Settings
@@ -44,6 +44,6 @@ def create_app(mode: str = "strip") -> FastAPI:
     return app
 
 
-def run_proxy(port: int = 9090, mode: str = "strip"):
+def run_proxy(port: int = 9090, host: str = "127.0.0.1", mode: str = "strip"):
     app = create_app(mode=mode)
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
+    uvicorn.run(app, host=host, port=port, log_level="info")

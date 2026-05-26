@@ -1,19 +1,22 @@
+import html
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, Form, Query, Request
+from fastapi import FastAPI, Form, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from scanner.config import Settings
-from scanner.pipeline import PipelineOrchestrator
-from scanner.reporters import JSONReporter
-from scanner.policies import PolicyGenerator
-from scanner.monitor import MonitorStore
-from scanner.proxy import ContentSafetyProxy
-from scanner.reputation import ReputationEngine
-from scanner.redteam import AdversarialPageGenerator, ScannerEvaluator
 from scanner.certification import CertificationPipeline
+from scanner.config import Settings
+from scanner.loaders.url import _validate_url
+from scanner.middleware import RateLimitMiddleware
+from scanner.monitor import MonitorStore
+from scanner.pipeline import PipelineOrchestrator
+from scanner.policies import PolicyGenerator
+from scanner.proxy import ContentSafetyProxy
+from scanner.redteam import AdversarialPageGenerator, ScannerEvaluator
+from scanner.reputation import ReputationEngine
 
 settings = Settings()
 orchestrator = PipelineOrchestrator(settings=settings)
@@ -24,11 +27,27 @@ cert_pipeline = CertificationPipeline(orchestrator)
 
 HERE = Path(__file__).parent
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' https://unpkg.com;"
+            " style-src 'self' 'unsafe-inline'"
+        )
+        response.headers["Referrer-Policy"] = "no-referrer"
+        return response
+
+
 app = FastAPI(
     title="Prompt Injection Scanner",
     description="Scan URLs, files, and text for prompt injection and adversarial content.",
     version="0.1.0",
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, max_requests=60, window_seconds=60)
 
 static_dir = HERE.parent.parent / "frontend" / "static"
 if static_dir.exists():
@@ -65,8 +84,10 @@ async def scan_url(
     elif paste:
         report = await orchestrator.scan_paste(paste)
     elif file_path:
-        if "/" in file_path.lstrip("./") or ".." in file_path:
-            return HTMLResponse("<div class='error'>Path traversal blocked: only filenames allowed.</div>")
+        resolved = Path(file_path).resolve()
+        safe = Path(".").resolve()
+        if safe not in resolved.parents and resolved != safe:
+            return HTMLResponse("<div class='error'>Path traversal blocked</div>")
         report = await orchestrator.scan_file(file_path)
     else:
         return HTMLResponse("<div class='error'>Provide a URL, file path, or pasted text.</div>")
@@ -110,6 +131,8 @@ async def api_recent_threats(hours: int = Query(24)):
 @app.post("/api/monitor/start")
 async def api_monitor_start(url: str = Form(...), interval: float = Form(6.0),
                              webhook: str = Form(""), label: str = Form("")):
+    if webhook:
+        webhook = _validate_url(webhook)
     url_id = monitor_store.add_url(url, interval, label, webhook)
     return {"url_id": url_id, "url": url, "interval_hours": interval}
 
@@ -216,13 +239,14 @@ def _render_report_fragment(report) -> str:
         <div class="finding finding-{f.severity}">
             <div class="finding-header">
                 <span class="badge badge-{f.severity}">{sv}</span>
-                <strong>{f.title}</strong>
+                <strong>{html.escape(f.title)}</strong>
                 <span class="detector">{f.detector}</span>
             </div>
             <div class="finding-body">
-                <p>{f.description}</p>
-                <pre class="snippet">{f.snippet[:200]}</pre>
-                {f'<p class="recommendation">{f.recommendation}</p>' if f.recommendation else ''}
+                <p>{html.escape(f.description)}</p>
+                <pre class="snippet">{html.escape(f.snippet[:200])}</pre>
+                {f'<p class="recommendation">{html.escape(f.recommendation)}</p>'
+                    if f.recommendation else ''}
             </div>
         </div>
         """
@@ -236,12 +260,12 @@ def _render_report_fragment(report) -> str:
                 {report.total_findings} findings · {report.scan_time_ms}ms
             </div>
         </div>
-        <div class="summary">{report.summary}</div>
+        <div class="summary">{html.escape(report.summary)}</div>
         <div class="findings-list">{findings_html}</div>
         <div class="actions">
             <button hx-post="/scan" hx-target="#results" hx-swap="outerHTML"
                     hx-include="#scan-form" class="btn btn-primary">Rescan</button>
-            <a href="/api/scan?url={report.url}" class="btn btn-secondary" target="_blank">View JSON</a>
+            <a href="/api/scan?url={html.escape(str(report.url))}" class="btn btn-secondary" target="_blank">View JSON</a>
         </div>
     </div>
     """

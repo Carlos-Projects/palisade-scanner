@@ -1,12 +1,11 @@
-import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from scanner.monitor.store import MonitorStore
-from scanner.monitor.diff import DiffDetector
 from scanner.monitor.alerter import Alerter
+from scanner.monitor.diff import DiffDetector
+from scanner.monitor.store import MonitorStore
 from scanner.pipeline import PipelineOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -55,7 +54,7 @@ class MonitorScheduler:
             id=job_id,
             args=[entry],
             replace_existing=True,
-            next_run_time=datetime.now(timezone.utc),  # run immediately
+            next_run_time=datetime.now(UTC),  # run immediately
         )
         self._tasks[entry["id"]] = job_id
         logger.info(f"Scheduled monitor for {entry['url']} every {interval}h")

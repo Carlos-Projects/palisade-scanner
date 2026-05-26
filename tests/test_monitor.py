@@ -1,11 +1,10 @@
-import json
 import tempfile
 from pathlib import Path
 
 import pytest
 
-from scanner.monitor import MonitorStore, Alerter
-from scanner.domain.models import Finding, ScanReport
+from scanner.domain.models import ScanReport
+from scanner.monitor import MonitorStore
 
 
 @pytest.fixture

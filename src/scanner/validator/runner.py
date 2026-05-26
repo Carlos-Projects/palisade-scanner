@@ -1,4 +1,3 @@
-import random
 from urllib.parse import urlparse
 
 from scanner.domain.models import Mission

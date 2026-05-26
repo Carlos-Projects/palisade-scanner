@@ -1,8 +1,7 @@
 import pytest
-from bs4 import BeautifulSoup
 
-from scanner.pipeline import PipelineOrchestrator
 from scanner.config import Settings
+from scanner.pipeline import PipelineOrchestrator
 
 
 @pytest.mark.asyncio
@@ -37,8 +36,8 @@ async def test_pipeline_clean_scan(sample_clean_html):
 @pytest.mark.asyncio
 async def test_pipeline_report_structure():
     """Verify report structure contains all expected fields."""
-    from scanner.pipeline import PipelineOrchestrator
     from scanner.config import Settings
+    from scanner.pipeline import PipelineOrchestrator
 
     settings = Settings()
     orchestrator = PipelineOrchestrator(settings=settings)

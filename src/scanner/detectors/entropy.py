@@ -67,7 +67,7 @@ class EntropyAnalyzer(BaseDetector):
                     findings.append(self._finding(
                         severity="critical",
                         title="Base64 encoded instruction detected",
-                        desc=f"Base64 decodes to content containing instruction keywords.",
+                        desc="Base64 decodes to content containing instruction keywords.",
                         snippet=decoded[:300],
                     ))
                 elif len(m.group()) >= 40:
@@ -88,7 +88,7 @@ class EntropyAnalyzer(BaseDetector):
                     findings.append(self._finding(
                         severity="critical",
                         title="Hex encoded instruction detected",
-                        desc=f"Hex decodes to content containing instruction keywords.",
+                        desc="Hex decodes to content containing instruction keywords.",
                         snippet=decoded[:300],
                     ))
             except Exception:

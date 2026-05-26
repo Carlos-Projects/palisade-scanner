@@ -1,11 +1,9 @@
-import json
 import sqlite3
-from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
-from scanner.reputation.scorer import ReputationScorer
 from scanner.domain.models import ReputationEntry, ScanReport
+from scanner.reputation.scorer import ReputationScorer
 
 
 class ReputationEngine:

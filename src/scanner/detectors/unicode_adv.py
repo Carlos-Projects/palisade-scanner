@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from bs4 import BeautifulSoup
 
 from scanner.detectors.base import BaseDetector
-from scanner.domain.models import Finding, TextNode
+from scanner.domain.models import Finding
 
 if TYPE_CHECKING:
     pass

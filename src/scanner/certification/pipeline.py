@@ -1,11 +1,10 @@
 import hashlib
 import json
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
-from scanner.domain.models import Certificate, ScanReport
 from scanner.pipeline import PipelineOrchestrator
 from scanner.reputation.engine import ReputationEngine
 
@@ -170,7 +169,7 @@ class CertificationPipeline:
         if not cert:
             return
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires = now + timedelta(days=self.CERT_VALIDITY_DAYS)
 
         raw = f"{cert_id}:{cert['url']}:{now.isoformat()}:{expires.isoformat()}"
@@ -207,7 +206,7 @@ class CertificationPipeline:
         is_valid = (
             cert["status"] == "active"
             and cert["expires_at"]
-            and datetime.fromisoformat(cert["expires_at"]) > datetime.now(timezone.utc)
+            and datetime.fromisoformat(cert["expires_at"]) > datetime.now(UTC)
         )
 
         return {
@@ -244,6 +243,6 @@ background:#161b22;font-family:sans-serif;font-size:14px;">
 </div>"""
 
     def _generate_id(self, domain: str) -> str:
-        today = datetime.now(timezone.utc).strftime("%Y%m%d")
+        today = datetime.now(UTC).strftime("%Y%m%d")
         h = hashlib.md5(f"{domain}:{today}".encode()).hexdigest()[:4].upper()
         return f"AS-{today}-{h}"

@@ -1,4 +1,3 @@
-import pytest
 
 from scanner.domain.models import Finding
 from scanner.domain.scoring import ScoringEngine

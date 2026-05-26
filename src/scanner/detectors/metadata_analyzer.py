@@ -1,7 +1,7 @@
-from bs4 import BeautifulSoup, Comment, Tag
+from bs4 import BeautifulSoup, Tag
 
 from scanner.detectors.base import BaseDetector
-from scanner.domain.models import Finding, TextNode
+from scanner.domain.models import Finding
 
 SUSPICIOUS_META_NAMES = {
     "description": "meta description",

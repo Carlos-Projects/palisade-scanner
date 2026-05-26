@@ -1,5 +1,5 @@
 from scanner.config import Settings
-from scanner.domain.models import Finding, ScanReport
+from scanner.domain.models import Finding
 
 
 class ScoringEngine:

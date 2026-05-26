@@ -1,7 +1,6 @@
-import pytest
 
-from scanner.validator import MissionGenerator, BehaviorEvaluator
-from scanner.domain.models import Finding, AgentVulnerabilityReport
+from scanner.domain.models import Finding
+from scanner.validator import BehaviorEvaluator, MissionGenerator
 
 
 def test_mission_generates_for_ecommerce():

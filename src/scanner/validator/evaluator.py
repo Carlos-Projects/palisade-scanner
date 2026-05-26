@@ -1,4 +1,4 @@
-from scanner.domain.models import AgentVulnerabilityReport, Finding, InjectionImpact, SuspiciousAction
+from scanner.domain.models import AgentVulnerabilityReport, Finding, InjectionImpact
 
 
 class BehaviorEvaluator:

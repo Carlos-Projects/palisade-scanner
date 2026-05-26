@@ -3,19 +3,18 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
-from scanner.config import Settings
-from scanner.pipeline import PipelineOrchestrator
-from scanner.reporters import JSONReporter, MarkdownReporter, SimpleReporter
-from scanner.policies import PolicyGenerator
-from scanner.monitor import MonitorStore, MonitorScheduler, Alerter
-from scanner.proxy import ContentSafetyProxy
-from scanner.validator import AgentValidator, BehaviorEvaluator
-from scanner.reputation import ReputationEngine
-from scanner.redteam import AdversarialPageGenerator, ScannerEvaluator
 from scanner.certification import CertificationPipeline
+from scanner.config import Settings
+from scanner.monitor import Alerter, MonitorScheduler, MonitorStore
+from scanner.pipeline import PipelineOrchestrator
+from scanner.policies import PolicyGenerator
+from scanner.redteam import AdversarialPageGenerator, ScannerEvaluator
+from scanner.reporters import JSONReporter, MarkdownReporter, SimpleReporter
+from scanner.reputation import ReputationEngine
+from scanner.validator import AgentValidator, BehaviorEvaluator
 
 app = typer.Typer(
     name="pis",
@@ -204,7 +203,7 @@ def validate(
         findings = report.findings if scan_first else []
         result = evaluator.evaluate(session, findings)
 
-        console.print(f"\n[bold]Agent Vulnerability Report[/]")
+        console.print("\n[bold]Agent Vulnerability Report[/]")
         console.print(f"  Steps: {result.total_steps}")
         console.print(f"  Mission success: {result.mission_success}")
         console.print(f"  Injections triggered: {len(result.injections_triggered)}")
@@ -276,7 +275,7 @@ def redteam(
         console.print("[bold]Evaluating scanner...[/]")
         result = await evaluator.evaluate(pages)
 
-        console.print(f"\n[bold]Scanner Evaluation Report[/]")
+        console.print("\n[bold]Scanner Evaluation Report[/]")
         console.print(f"  Pages: {result.total_pages}")
         console.print(f"  Injections: {result.total_injections}")
         console.print(f"  Precision: {result.precision:.1%}")
@@ -331,7 +330,7 @@ def certify(
             return
 
         result = await certification.apply(url, email, org)
-        console.print(f"[bold]Certification Applied[/]")
+        console.print("[bold]Certification Applied[/]")
         console.print(f"  Certificate ID: {result.get('certificate_id', 'N/A')}")
         console.print(f"  Status: {result.get('status', 'error')}")
         console.print(f"  Initial risk: {result.get('initial_risk_score', 'N/A')}/100")
@@ -352,6 +351,7 @@ def web(
 ):
     """Launch the web UI."""
     import uvicorn
+
     from scanner.api import app as web_app
     console.print(f"[green]Web UI:[/] http://{host}:{port}")
     uvicorn.run(web_app, host=host, port=port)

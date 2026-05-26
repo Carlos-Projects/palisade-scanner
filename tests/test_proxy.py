@@ -1,8 +1,7 @@
 import pytest
 
-from scanner.proxy import ContentSafetyProxy, StripEngine, RewriteEngine
-from scanner.pipeline import PipelineOrchestrator
 from scanner.domain.models import Finding, TextNode
+from scanner.proxy import ContentSafetyProxy, RewriteEngine, StripEngine
 
 
 def test_strip_engine_removes_hidden():

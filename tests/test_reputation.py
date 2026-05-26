@@ -1,7 +1,6 @@
-import pytest
 
+from scanner.domain.models import Finding, ReputationEntry, ScanReport
 from scanner.reputation import ReputationEngine, ReputationScorer
-from scanner.domain.models import ReputationEntry, Finding, ScanReport
 
 
 def test_scorer_clean():

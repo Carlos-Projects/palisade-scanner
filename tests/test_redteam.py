@@ -1,7 +1,7 @@
 import pytest
 
-from scanner.redteam import AdversarialPageGenerator, ScannerEvaluator
 from scanner.pipeline import PipelineOrchestrator
+from scanner.redteam import AdversarialPageGenerator, ScannerEvaluator
 
 
 def test_generate_adversarial_page():

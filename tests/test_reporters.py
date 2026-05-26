@@ -1,7 +1,7 @@
 import pytest
 
-from scanner.reporters import JSONReporter, MarkdownReporter, SimpleReporter
 from scanner.domain.models import Finding, ScanReport
+from scanner.reporters import JSONReporter, MarkdownReporter, SimpleReporter
 
 
 @pytest.fixture

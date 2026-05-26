@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from scanner.domain.models import ReputationEntry
 
@@ -30,7 +30,7 @@ class ReputationScorer:
         base += min(entry.total_scans * 0.5, 15)
 
         if entry.last_finding_at:
-            days_clean = (datetime.now(timezone.utc) - entry.last_finding_at).days
+            days_clean = (datetime.now(UTC) - entry.last_finding_at).days
             base += min(days_clean * 0.1, 20)
 
         if entry.has_https:

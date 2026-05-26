@@ -1,6 +1,5 @@
 import base64
 import re
-import unicodedata
 
 from bs4 import BeautifulSoup, Comment, Tag
 

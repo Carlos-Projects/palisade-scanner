@@ -2,17 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 import httpx
-from bs4 import BeautifulSoup
 
 from scanner.config import Settings
 from scanner.domain.models import ScanReport
 from scanner.pipeline import PipelineOrchestrator
-from scanner.proxy.strip import StripEngine
 from scanner.proxy.rewrite import RewriteEngine
+from scanner.proxy.strip import StripEngine
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +22,10 @@ class CachedResponse:
         self.content = content
         self.content_type = content_type
         self.scan = scan
-        self.expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
+        self.expires_at = datetime.now(UTC) + timedelta(seconds=ttl_seconds)
 
     def is_expired(self) -> bool:
-        return datetime.now(timezone.utc) > self.expires_at
+        return datetime.now(UTC) > self.expires_at
 
 
 class ContentSafetyProxy:

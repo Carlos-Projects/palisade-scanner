@@ -1,10 +1,9 @@
 import random
-from copy import deepcopy
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
 
-from scanner.domain.models import Finding, GeneratedPage, InjectionSpec
+from scanner.domain.models import GeneratedPage, InjectionSpec
 
 
 class EcommerceTemplate:
@@ -274,10 +273,11 @@ class AdversarialPageGenerator:
 
             elif method == "image_stego":
                 try:
-                    from PIL import Image
-                    import numpy as np
-                    import io
                     import base64 as b64_lib
+                    import io
+
+                    import numpy as np
+                    from PIL import Image
 
                     pixels = np.random.randint(0, 256, (20, 20, 3), dtype=np.uint8)
                     lsb_random = np.random.randint(0, 2, pixels.shape, dtype=np.uint8)

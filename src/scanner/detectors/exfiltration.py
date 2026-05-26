@@ -3,7 +3,7 @@ import re
 from bs4 import BeautifulSoup
 
 from scanner.detectors.base import BaseDetector
-from scanner.domain.models import Finding, TextNode
+from scanner.domain.models import Finding
 
 EXFILTRATION_PATTERNS = [
     r"https?://[^/\s]+/(?:log|track|collect|api/webhook|hook|callback|beacon)",

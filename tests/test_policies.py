@@ -1,4 +1,3 @@
-import pytest
 
 from scanner.domain.models import Finding, ScanReport
 from scanner.policies import PolicyGenerator

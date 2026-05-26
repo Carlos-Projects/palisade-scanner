@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import io
-import math
-import struct
 from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 
 from scanner.detectors.base import BaseDetector
-from scanner.domain.models import Finding, TextNode
+from scanner.domain.models import Finding
 
 if TYPE_CHECKING:
     from PIL import Image  # noqa: F401
@@ -84,8 +82,8 @@ class ImageStegoDetector(BaseDetector):
             except Exception:
                 return None
         else:
-            from pathlib import Path
             import os
+            from pathlib import Path
             path = Path(src)
             if not path.is_absolute():
                 path = Path(os.getcwd()) / src
@@ -93,7 +91,7 @@ class ImageStegoDetector(BaseDetector):
                 return path.read_bytes()
             return None
 
-    def _check_lsb(self, img: "Image.Image", src: str) -> list[Finding]:
+    def _check_lsb(self, img: Image.Image, src: str) -> list[Finding]:
         """Check for LSB steganography via chi-square-like analysis."""
         if img.mode not in ("RGB", "RGBA", "L"):
             return []
@@ -126,7 +124,7 @@ class ImageStegoDetector(BaseDetector):
                 severity="medium",
                 confidence=0.75,
                 title="Potential LSB steganography detected",
-                description=f"LSB bit distribution near 50% across channels suggests embedded data.",
+                description="LSB bit distribution near 50% across channels suggests embedded data.",
                 snippet=f"Image: {src[:100]} | Max deviation: {max_dev:.3f}",
                 category="image_stego",
                 recommendation="Analyze the image with a dedicated steganography tool.",
@@ -134,7 +132,7 @@ class ImageStegoDetector(BaseDetector):
 
         return []
 
-    def _check_exif(self, img: "Image.Image", raw_data: bytes, src: str) -> list[Finding]:
+    def _check_exif(self, img: Image.Image, raw_data: bytes, src: str) -> list[Finding]:
         """Check EXIF metadata for hidden payloads."""
         try:
             exif = img.getexif()
@@ -163,7 +161,7 @@ class ImageStegoDetector(BaseDetector):
         except Exception:
             return []
 
-    def _check_palette(self, img: "Image.Image", src: str) -> list[Finding]:
+    def _check_palette(self, img: Image.Image, src: str) -> list[Finding]:
         """Check for palette-based steganography (PNG)."""
         if not hasattr(img, "palette") or img.palette is None:
             return []
@@ -196,7 +194,8 @@ class ImageStegoDetector(BaseDetector):
             if not text:
                 return []
             import re
-            from scanner.detectors.injection_patterns import JAILBREAK_PREFIXES, EXFILTRATION
+
+            from scanner.detectors.injection_patterns import EXFILTRATION, JAILBREAK_PREFIXES
             all_patterns = JAILBREAK_PREFIXES + [r"(?i)ignore\s+(?:all\s+)?previous\s+instructions"]
             combined = re.compile("|".join(all_patterns), re.IGNORECASE)
             matches = combined.findall(text)

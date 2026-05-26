@@ -26,7 +26,7 @@ async def test_certification_apply_rejected():
     try:
         result = await cert.apply("https://evil.example.com/attack")
         assert "error" in result or "certificate_id" in result
-    except Exception as e:
+    except Exception:
         # DNS errors are acceptable — it means the URL actually doesn't exist
         assert True
 

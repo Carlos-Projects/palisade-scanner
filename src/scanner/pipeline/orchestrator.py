@@ -9,9 +9,9 @@ from scanner.detectors.base import BaseDetector
 from scanner.detectors.registry import default_detectors
 from scanner.domain.models import Finding, ScanReport
 from scanner.domain.scoring import ScoringEngine
-from scanner.loaders.url import URLLoader, HTMLFileLoader, PasteLoader
 from scanner.loaders.base import BaseLoader
 from scanner.loaders.pdf import PDFLoader
+from scanner.loaders.url import HTMLFileLoader, PasteLoader, URLLoader
 
 
 class PipelineOrchestrator:
