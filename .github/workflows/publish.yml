@@ -6,6 +6,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
+
   docker:
     runs-on: ubuntu-latest
     steps:
@@ -26,3 +48,15 @@ jobs:
           tags: |
             ghcr.io/carlos-projects/palisade-scanner:latest
             ghcr.io/carlos-projects/palisade-scanner:${{ github.ref_name }}
+
+  deploy-hf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Push to HuggingFace Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add hf https://user:${HF_TOKEN}@huggingface.co/spaces/Syntho/palisade-scanner
+          git push hf main

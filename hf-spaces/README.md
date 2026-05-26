@@ -7,7 +7,7 @@ sdk: docker
 pinned: false
 app_port: 8000
 fullWidth: true
-short_description: Scan any URL for prompt injection, hidden instructions, and adversarial content targeting AI agents
+short_description: Scan web content for prompt injection targeting AI agents
 ---
 
 # Palisade Scanner 🔍
