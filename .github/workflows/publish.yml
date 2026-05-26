@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install build twine
-      - run: python -m build
+      - run: rm -rf dist/ && python -m build
       - run: twine upload dist/*
         env:
           TWINE_USERNAME: __token__
