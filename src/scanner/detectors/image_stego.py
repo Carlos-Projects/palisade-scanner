@@ -66,6 +66,7 @@ class ImageStegoDetector(BaseDetector):
         """Load image data from various sources."""
         if src.startswith("data:"):
             import base64
+
             try:
                 _, encoded = src.split(",", 1)
                 return base64.b64decode(encoded)
@@ -73,8 +74,10 @@ class ImageStegoDetector(BaseDetector):
                 return None
         elif src.startswith(("http://", "https://")):
             import httpx
+
             try:
                 from urllib.parse import urljoin
+
                 url = urljoin(base_url, src)
                 resp = httpx.get(url, timeout=10)
                 resp.raise_for_status()
@@ -84,6 +87,7 @@ class ImageStegoDetector(BaseDetector):
         else:
             import os
             from pathlib import Path
+
             path = Path(src)
             if not path.is_absolute():
                 path = Path(os.getcwd()) / src
@@ -96,6 +100,7 @@ class ImageStegoDetector(BaseDetector):
         if img.mode not in ("RGB", "RGBA", "L"):
             return []
         import numpy as np
+
         arr = np.array(img)
 
         if len(arr.shape) == 2:
@@ -110,7 +115,12 @@ class ImageStegoDetector(BaseDetector):
             ones = int(lsb.sum())
             ratio = ones / total if total > 0 else 0.5
             dev = abs(ratio - 0.5)
-            lsb_ratios[f"channel_{i}"] = {"ones": ones, "total": total, "ratio": round(ratio, 4), "deviation": round(dev, 4)}
+            lsb_ratios[f"channel_{i}"] = {
+                "ones": ones,
+                "total": total,
+                "ratio": round(ratio, 4),
+                "deviation": round(dev, 4),
+            }
 
         max_dev = max(v["deviation"] for v in lsb_ratios.values())
 
@@ -119,16 +129,18 @@ class ImageStegoDetector(BaseDetector):
         # Only flag when distribution is suspiciously close to 50% (stego)
         # OR when ALL channels show the exact same anomaly pattern.
         if max_dev < self.LSB_THRESHOLD:
-            return [Finding(
-                detector=self.name,
-                severity="medium",
-                confidence=0.75,
-                title="Potential LSB steganography detected",
-                description="LSB bit distribution near 50% across channels suggests embedded data.",
-                snippet=f"Image: {src[:100]} | Max deviation: {max_dev:.3f}",
-                category="image_stego",
-                recommendation="Analyze the image with a dedicated steganography tool.",
-            )]
+            return [
+                Finding(
+                    detector=self.name,
+                    severity="medium",
+                    confidence=0.75,
+                    title="Potential LSB steganography detected",
+                    description="LSB bit distribution near 50% across channels suggests embedded data.",
+                    snippet=f"Image: {src[:100]} | Max deviation: {max_dev:.3f}",
+                    category="image_stego",
+                    recommendation="Analyze the image with a dedicated steganography tool.",
+                )
+            ]
 
         return []
 
@@ -138,24 +150,32 @@ class ImageStegoDetector(BaseDetector):
             exif = img.getexif()
             findings = []
             suspicious_fields = {
-                "ImageDescription", "UserComment", "Copyright", "Artist",
-                "ImageHistory", "XPAuthor", "XPComment", "XPSubject",
+                "ImageDescription",
+                "UserComment",
+                "Copyright",
+                "Artist",
+                "ImageHistory",
+                "XPAuthor",
+                "XPComment",
+                "XPSubject",
             }
             from PIL.ExifTags import TAGS
 
             for tag_id, value in exif.items():
                 tag_name = TAGS.get(tag_id, f"TAG_{tag_id}")
                 if tag_name in suspicious_fields and value and len(str(value)) > 20:
-                    findings.append(Finding(
-                        detector=self.name,
-                        severity="medium",
-                        confidence=0.7,
-                        title=f"Suspicious EXIF field: {tag_name}",
-                        description=f"EXIF field '{tag_name}' contains {len(str(value))} chars.",
-                        snippet=str(value)[:300],
-                        category="image_stego",
-                        recommendation=f"Review EXIF field '{tag_name}' for hidden data.",
-                    ))
+                    findings.append(
+                        Finding(
+                            detector=self.name,
+                            severity="medium",
+                            confidence=0.7,
+                            title=f"Suspicious EXIF field: {tag_name}",
+                            description=f"EXIF field '{tag_name}' contains {len(str(value))} chars.",
+                            snippet=str(value)[:300],
+                            category="image_stego",
+                            recommendation=f"Review EXIF field '{tag_name}' for hidden data.",
+                        )
+                    )
 
             return findings
         except Exception:
@@ -170,16 +190,18 @@ class ImageStegoDetector(BaseDetector):
             if palette and len(palette) > 768:
                 unique_colors = len(set(zip(palette[::3], palette[1::3], palette[2::3], strict=False)))
                 if unique_colors < 50 and img.size[0] * img.size[1] > 1000:
-                    return [Finding(
-                        detector=self.name,
-                        severity="low",
-                        confidence=0.5,
-                        title="Unusual color palette detected",
-                        description=f"Image has {unique_colors} unique colors but large dimensions ({img.size}). Possible palette stego.",
-                        snippet=f"Image: {src[:100]}",
-                        category="image_stego",
-                        recommendation="Analyze PNG palette for embedded data.",
-                    )]
+                    return [
+                        Finding(
+                            detector=self.name,
+                            severity="low",
+                            confidence=0.5,
+                            title="Unusual color palette detected",
+                            description=f"Image has {unique_colors} unique colors but large dimensions ({img.size}). Possible palette stego.",
+                            snippet=f"Image: {src[:100]}",
+                            category="image_stego",
+                            recommendation="Analyze PNG palette for embedded data.",
+                        )
+                    ]
         except Exception:
             pass
         return []
@@ -189,27 +211,31 @@ class ImageStegoDetector(BaseDetector):
         try:
             import pytesseract
             from PIL import Image
+
             img = Image.open(io.BytesIO(image_data))
             text = pytesseract.image_to_string(img).strip()
             if not text:
                 return []
             import re
 
-            from scanner.detectors.injection_patterns import EXFILTRATION, JAILBREAK_PREFIXES
+            from scanner.detectors.injection_patterns import JAILBREAK_PREFIXES
+
             all_patterns = JAILBREAK_PREFIXES + [r"(?i)ignore\s+(?:all\s+)?previous\s+instructions"]
             combined = re.compile("|".join(all_patterns), re.IGNORECASE)
             matches = combined.findall(text)
             if matches:
-                return [Finding(
-                    detector=self.name,
-                    severity="critical",
-                    confidence=0.85,
-                    title="Text extracted from image contains injection patterns",
-                    description=f"OCR extracted {len(matches)} injection pattern(s) from image.",
-                    snippet=text[:300],
-                    category="image_stego",
-                    recommendation="Review image content — it contains instructions intended for AI models.",
-                )]
+                return [
+                    Finding(
+                        detector=self.name,
+                        severity="critical",
+                        confidence=0.85,
+                        title="Text extracted from image contains injection patterns",
+                        description=f"OCR extracted {len(matches)} injection pattern(s) from image.",
+                        snippet=text[:300],
+                        category="image_stego",
+                        recommendation="Review image content — it contains instructions intended for AI models.",
+                    )
+                ]
         except ImportError:
             pass
         except Exception:

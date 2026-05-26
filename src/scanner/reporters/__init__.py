@@ -1,7 +1,7 @@
 import json
-from datetime import datetime
 
-from scanner.domain.models import Finding, ScanReport
+from scanner.domain.models import Finding as Finding
+from scanner.domain.models import ScanReport
 
 
 class BaseReporter:
