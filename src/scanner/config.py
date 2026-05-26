@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     llm_max_retries: int = 3
 
     # Hosting / API
-    web_host: str = "127.0.0.1"
+    web_host: str = "0.0.0.0"
     web_port: int = 8000
 
     # Proxy

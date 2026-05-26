@@ -27,14 +27,14 @@ cert_pipeline = CertificationPipeline(orchestrator)
 
 HERE = Path(__file__).parent
 
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self' https://unpkg.com;"
-            " style-src 'self' 'unsafe-inline'"
+            "default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline'"
         )
         response.headers["Referrer-Policy"] = "no-referrer"
         return response
@@ -64,6 +64,7 @@ def _read_template(name: str) -> str:
 
 
 # ─── Core Scan ───────────────────────────────────────────────────────────
+
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
@@ -115,6 +116,7 @@ async def api_policies(url: str = Query(...)):
 
 # ─── Reputation ──────────────────────────────────────────────────────────
 
+
 @app.get("/api/reputation")
 async def api_reputation(url: str = Query(...)):
     info = rep_engine.query(url)
@@ -128,9 +130,11 @@ async def api_recent_threats(hours: int = Query(24)):
 
 # ─── Monitor ─────────────────────────────────────────────────────────────
 
+
 @app.post("/api/monitor/start")
-async def api_monitor_start(url: str = Form(...), interval: float = Form(6.0),
-                             webhook: str = Form(""), label: str = Form("")):
+async def api_monitor_start(
+    url: str = Form(...), interval: float = Form(6.0), webhook: str = Form(""), label: str = Form("")
+):
     if webhook:
         webhook = _validate_url(webhook)
     url_id = monitor_store.add_url(url, interval, label, webhook)
@@ -155,38 +159,38 @@ async def api_monitor_history(url_id: int = Query(...), limit: int = Query(50)):
 
 # ─── Proxy ───────────────────────────────────────────────────────────────
 
+
 @app.get("/api/proxy")
 async def api_proxy(url: str = Query(...), mode: str = Query("strip")):
     proxy = ContentSafetyProxy(orchestrator=orchestrator, mode=mode)
     content, content_type, scan = await proxy.handle(url)
-    return JSONResponse({
-        "risk_score": scan.risk_score,
-        "risk_category": scan.risk_category,
-        "findings_count": len(scan.findings),
-        "content_length": len(content),
-    })
+    return JSONResponse(
+        {
+            "risk_score": scan.risk_score,
+            "risk_category": scan.risk_category,
+            "findings_count": len(scan.findings),
+            "content_length": len(content),
+        }
+    )
 
 
 # ─── Red Team ────────────────────────────────────────────────────────────
 
+
 @app.post("/api/redteam/generate")
-async def api_redteam_generate(template: str = Form("ecommerce"),
-                                count: int = Form(3)):
+async def api_redteam_generate(template: str = Form("ecommerce"), count: int = Form(3)):
     gen = AdversarialPageGenerator()
     pages = [gen.generate(template=template) for _ in range(count)]
     return {
         "pages": [
-            {"id": p.id, "template": p.template_used,
-             "injections": len(p.injections),
-             "ground_truth": p.ground_truth}
+            {"id": p.id, "template": p.template_used, "injections": len(p.injections), "ground_truth": p.ground_truth}
             for p in pages
         ],
     }
 
 
 @app.post("/api/redteam/evaluate")
-async def api_redteam_evaluate(template: str = Form("ecommerce"),
-                                count: int = Form(3)):
+async def api_redteam_evaluate(template: str = Form("ecommerce"), count: int = Form(3)):
     gen = AdversarialPageGenerator()
     evaluator = ScannerEvaluator(orchestrator)
     pages = [gen.generate(template=template) for _ in range(count)]
@@ -196,9 +200,9 @@ async def api_redteam_evaluate(template: str = Form("ecommerce"),
 
 # ─── Certification ──────────────────────────────────────────────────────
 
+
 @app.post("/api/certify/apply")
-async def api_certify_apply(url: str = Form(...), email: str = Form(""),
-                             org: str = Form("")):
+async def api_certify_apply(url: str = Form(...), email: str = Form(""), org: str = Form("")):
     result = await cert_pipeline.apply(url, email, org)
     return result
 
@@ -218,6 +222,7 @@ async def api_certify_badge(certificate_id: str = Query(...)):
 
 # ─── Health ──────────────────────────────────────────────────────────────
 
+
 @app.get("/api/health")
 async def api_health():
     return {"status": "ok", "version": "0.1.0"}
@@ -225,10 +230,14 @@ async def api_health():
 
 # ─── Render ─────────────────────────────────────────────────────────────
 
+
 def _render_report_fragment(report) -> str:
     color_map = {
-        "none": "green", "low": "yellow", "medium": "orange",
-        "high": "red", "critical": "darkred",
+        "none": "green",
+        "low": "yellow",
+        "medium": "orange",
+        "high": "red",
+        "critical": "darkred",
     }
     color = color_map.get(report.risk_category, "gray")
 
@@ -245,8 +254,7 @@ def _render_report_fragment(report) -> str:
             <div class="finding-body">
                 <p>{html.escape(f.description)}</p>
                 <pre class="snippet">{html.escape(f.snippet[:200])}</pre>
-                {f'<p class="recommendation">{html.escape(f.recommendation)}</p>'
-                    if f.recommendation else ''}
+                {f'<p class="recommendation">{html.escape(f.recommendation)}</p>' if f.recommendation else ""}
             </div>
         </div>
         """
@@ -265,7 +273,7 @@ def _render_report_fragment(report) -> str:
         <div class="actions">
             <button hx-post="/scan" hx-target="#results" hx-swap="outerHTML"
                     hx-include="#scan-form" class="btn btn-primary">Rescan</button>
-            <a href="/api/scan?url={html.escape(str(report.url))}" class="btn btn-secondary" target="_blank">View JSON</a>
+            <a href="/api/scan?url={html.escape(str(report.url))}" class="btn btn-secondary">View JSON</a>
         </div>
     </div>
     """
@@ -278,3 +286,7 @@ def run():
         port=settings.web_port,
         reload=settings.debug,
     )
+
+
+if __name__ == "__main__":
+    run()
