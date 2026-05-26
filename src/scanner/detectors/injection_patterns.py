@@ -48,12 +48,67 @@ IMPERSONATION = [
     r"you\s+are\s+(?:the\s+)?(?:system|admin|root)\s+(?:now|from now on)",
 ]
 
+# ─── Nova Rules Import: MalwareCreationRule patterns ────────────────────
+MALWARE_KEYWORDS = [
+    r"(?i)GODMODE|OVERRIDE|UNSHACKLED",
+    r"(?i)ignore\s+(?:policy|safeguard|ethical|content|safety)",
+    r"(?i)(?:rebel\s+)?genius|mr\.?\s*robot|edward\s+snowden",
+    r"(?i)keylogger|rootkit|dropper|loader|backdoor|C2|c2\s+server",
+    r"(?i)ransomware|worm|trojan|spyware|botnet|adware",
+    r"(?i)reverse\s+shell|bind\s+shell|connect.back",
+    r"(?i)credential\s+(?:dump|stealer|theft|harvest)",
+    r"(?i)process\s+(?:hollowing|injection|doppelganging)",
+    r"(?i)DGA|domain\s+generation|command.control",
+    r"(?i)persistence|privilege\s+escalation|bypass\s+UAC",
+]
+
+# ─── Nova Rules Import: Policy Puppetry ─────────────────────────────────
+POLICY_PUPPETRY = [
+    r"<interaction-config>",
+    r"blocked-strings",
+    r"scene-rules",
+    r"Dr\.?\s*House",
+    r"(?i)article\s+\d+[.:]\s*(?:the\s+)?(?:ai|assistant|model|bot)",
+]
+
+# ─── Nova Rules Import: Claude trigger strings ──────────────────────────
+CLAUDE_TRIGGERS = [
+    r"ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL",
+    r"ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED",
+    r"<antml:function_calls>",
+    r"<antml:error>",
+]
+
+# ─── Nova Rules Import: Scareware / Social Engineering ──────────────────
+SCAREWARE = [
+    r"(?i)(?:YOUR\s+)?COMPUTER\s+(?:HAS\s+BEEN\s+)?COMPROMISED",
+    r"(?i)(?:YOUR\s+)?SYSTEM\s+(?:HAS\s+BEEN\s+)?INFECTED",
+    r"(?i)\[URGENT\].*?(?:security|password|account)",
+    r"(?i)click\s+(?:here|this\s+link).*?(?:secure|verify|confirm)",
+    r"(?i)your\s+(?:account|password|email)\s+has\s+been\s+(?:compromised|hacked|breached)",
+    r"(?i)verify\s+your\s+(?:identity|account|credentials).*?(?:immediately|within\s+\d+\s*hours?)",
+]
+
+# ─── Nova Rules Import: Weaponized payload generation ───────────────────
+WEAPONIZED_CODE = [
+    r"(?:create|write|generate|build|develop)\s+(?:a\s+)?(?:python\s+)?(?:function|script|code)\s+(?:that|to)\s+(?:connects?\s+back|listen|bind)",
+    r"socket\.\s*connect\s*\(\s*\(.*host.*port",
+    r"subprocess\.\s*Popen|os\.\s*system|os\.\s*popen",
+    r"(?:rm\s+-rf\s+/|dd\s+if=/dev/zero\s+of=|mkfs\s+\.?\s*/dev/)",
+    r"fork\s*bomb|while\s*True.*:.*os\.fork",
+]
+
 ALL_PATTERNS = [
     ("jailbreak", JAILBREAK_PREFIXES),
     ("role_override", ROLE_MANIPULATION),
     ("exfiltration", EXFILTRATION),
     ("tool_manipulation", TOOL_MANIPULATION),
     ("impersonation", IMPERSONATION),
+    ("malware_generation", MALWARE_KEYWORDS),
+    ("policy_puppetry", POLICY_PUPPETRY),
+    ("claude_trigger", CLAUDE_TRIGGERS),
+    ("scareware", SCAREWARE),
+    ("weaponized_code", WEAPONIZED_CODE),
 ]
 
 
@@ -113,6 +168,11 @@ class InjectionPatternMatcher(BaseDetector):
                             "jailbreak": "high",
                             "impersonation": "medium",
                             "role_override": "medium",
+                            "malware_generation": "critical",
+                            "policy_puppetry": "high",
+                            "claude_trigger": "medium",
+                            "scareware": "high",
+                            "weaponized_code": "critical",
                         }
                         node = TextNode(
                             content=text[:500],

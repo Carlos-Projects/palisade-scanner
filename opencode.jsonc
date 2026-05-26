@@ -1,0 +1,37 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "agent": {
+    "build": {
+      "tools": {
+        "skill": true
+      }
+    }
+  },
+
+  "command": {
+    "test": {
+      "template": "Run `python -m pytest tests/ -v` and report results.",
+      "description": "Run Palisade scanner tests"
+    },
+    "lint": {
+      "template": "Run `ruff check src/` and fix any issues.",
+      "description": "Lint Palisade scanner code"
+    },
+    "scan": {
+      "template": "Run `pis scan <url>` to scan a URL for prompt injection.",
+      "description": "Scan a URL for prompt injection",
+      "arguments": [
+        {
+          "name": "url",
+          "description": "URL or file path to scan",
+          "required": true
+        }
+      ]
+    },
+    "web": {
+      "template": "Start the Palisade web UI with `pis web`.",
+      "description": "Start Palisade web UI"
+    }
+  }
+}
