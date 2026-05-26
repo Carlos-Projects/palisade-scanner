@@ -84,6 +84,10 @@ all = [
 pis = "scanner.cli:app"
 palisade = "scanner.cli:app"
 
+[project.urls]
+Homepage = "https://github.com/Carlos-Projects/palisade-scanner"
+Repository = "https://github.com/Carlos-Projects/palisade-scanner"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/scanner"]
 

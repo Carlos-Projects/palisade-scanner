@@ -1,10 +1,28 @@
 # Palisade Scanner 🔍
 
-Scan web content for **prompt injection**, **hidden instructions**, and **adversarial content** targeting AI agents.
-
 [![PyPI](https://img.shields.io/pypi/v/palisade-scanner)](https://pypi.org/project/palisade-scanner/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![CI](https://github.com/Carlos-Projects/palisade-scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlos-Projects/palisade-scanner/actions)
+
+**Scan web content for prompt injection, hidden instructions, and adversarial content targeting AI agents.**
+
+AI agents browse the web, read documents, and consume external content. Adversaries hide instructions in invisible text, HTML metadata, encoded payloads, and zero-width characters — Palisade finds them all.
+
+---
+
+## What makes Palisade unique
+
+| Capability | Palisade Scanner | Manual review | Generic scrapers |
+|---|---|---|---|
+| **Hidden text detection** | ✅ 20+ CSS/HTML techniques | ❌ | ❌ |
+| **Injection pattern matching** | ✅ 100+ regexes, 5 categories | ❌ | ❌ |
+| **LLM-as-judge classifier** | ✅ understands adversarial intent | N/A | ❌ |
+| **Metadata analysis** | ✅ comments, JSON-LD, meta, data attrs | ❌ | ❌ |
+| **Exfiltration detection** | ✅ URLs, eval(), fetch(), redirects | ❌ | ❌ |
+| **MCPGuard policy generation** | ✅ auto-generate rules | ❌ | ❌ |
+| **CI/CD mode** | ✅ `--ci --threshold high` | ❌ | ❌ |
+| **Zero-width character detection** | ✅ | ❌ | ❌ |
 
 ---
 
