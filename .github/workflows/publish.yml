@@ -33,12 +33,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - id: lower
+        name: Set lowercase repo
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          tags: ghcr.io/${{ steps.lower.outputs.repo }}:latest,ghcr.io/${{ steps.lower.outputs.repo }}:${{ github.ref_name }}
 
   deploy-hf:
     runs-on: ubuntu-latest
@@ -49,4 +52,4 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git remote add hf https://user:${HF_TOKEN}@huggingface.co/spaces/Syntho/palisade-scanner
-          git push hf main
+          git push hf main --force

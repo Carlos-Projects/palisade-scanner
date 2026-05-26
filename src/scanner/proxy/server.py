@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def create_app(mode: str = "strip") -> FastAPI:
     settings = Settings()
     orchestrator = PipelineOrchestrator(settings=settings)
-    proxy = ContentSafetyProxy(orchestrator=orchestrator, settings=settings, mode=mode)
+    proxy = ContentSafetyProxy(orchestrator=orchestrator, settings=settings, mode=mode)  # type: ignore[arg-type]
 
     app = FastAPI(title="Content Safety Proxy")
 
@@ -35,7 +35,7 @@ def create_app(mode: str = "strip") -> FastAPI:
     async def proxy_audit(url: str = Query(...)):
         """Get the scan report for a URL without filtering."""
         report = await orchestrator.scan_url(url)
-        return JSONResponse(report.model_dump(mode="json", default=str))
+        return JSONResponse(report.model_dump(mode="json"))
 
     @app.get("/proxy/status")
     async def proxy_status():

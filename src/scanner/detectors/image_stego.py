@@ -34,7 +34,7 @@ class ImageStegoDetector(BaseDetector):
         from PIL import Image
 
         for img_tag in soup.find_all("img"):
-            src = img_tag.get("src", "")
+            src = str(img_tag.get("src", ""))
             if not src or source_url == "inline":
                 continue
 

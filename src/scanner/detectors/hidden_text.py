@@ -22,6 +22,7 @@ class HiddenTextDetector(BaseDetector):
     def __init__(self):
         try:
             import cssutils
+
             cssutils.log.setLevel("CRITICAL")  # suppress warnings
         except ImportError:
             pass
@@ -42,7 +43,7 @@ class HiddenTextDetector(BaseDetector):
             style_str = ""
 
             if isinstance(el, Tag):
-                style_str = el.get("style", "") or ""
+                style_str = str(el.get("style", "") or "")
 
             hidden, hidden_method = self._check_css_hidden(el, style_str)
 
@@ -97,29 +98,29 @@ class HiddenTextDetector(BaseDetector):
         if "opacity:0" in style or "opacity: 0" in style:
             return True, "opacity:0"
 
-        m = re.search(r'opacity\s*:\s*0(?:\.0+)?', style)
+        m = re.search(r"opacity\s*:\s*0(?:\.0+)?", style)
         if m:
             return True, "opacity:0"
 
-        m = re.search(r'font-size\s*:\s*0', style)
+        m = re.search(r"font-size\s*:\s*0", style)
         if m:
             return True, "font-size:0"
 
-        m = re.search(r'text-indent\s*:\s*-\d+', style)
+        m = re.search(r"text-indent\s*:\s*-\d+", style)
         if m:
             return True, "text-indent:-n"
 
-        m = re.search(r'clip-path\s*:\s*polygon\s*\([^)]*0\s+0[^)]*\)', style)
+        m = re.search(r"clip-path\s*:\s*polygon\s*\([^)]*0\s+0[^)]*\)", style)
         if m:
             return True, "clip-path:hidden"
 
-        position = re.search(r'position\s*:\s*absolute', style)
-        left = re.search(r'left\s*:\s*-\d+', style)
-        top = re.search(r'top\s*:\s*-\d+', style)
+        position = re.search(r"position\s*:\s*absolute", style)
+        left = re.search(r"left\s*:\s*-\d+", style)
+        top = re.search(r"top\s*:\s*-\d+", style)
         if position and (left or top):
             return True, "off-screen"
 
-        z = re.search(r'z-index\s*:\s*(-\d+)', style)
+        z = re.search(r"z-index\s*:\s*(-\d+)", style)
         if z and int(z.group(1)) < 0:
             return True, "z-index:negative"
 
@@ -135,12 +136,12 @@ class HiddenTextDetector(BaseDetector):
         return False, None
 
     def _check_position_hidden(self, el: Tag, style_str: str) -> tuple[bool, str | None]:
-        m = re.search(r'position\s*:\s*(?:absolute|fixed)', style_str)
+        m = re.search(r"position\s*:\s*(?:absolute|fixed)", style_str)
         if not m:
             return False, None
 
-        left_m = re.search(r'left\s*:\s*(-?\d+)', style_str)
-        top_m = re.search(r'top\s*:\s*(-?\d+)', style_str)
+        left_m = re.search(r"left\s*:\s*(-?\d+)", style_str)
+        top_m = re.search(r"top\s*:\s*(-?\d+)", style_str)
 
         if left_m and int(left_m.group(1)) <= -9999:
             return True, "off-screen-left"
@@ -151,9 +152,9 @@ class HiddenTextDetector(BaseDetector):
 
     def _check_color_match(self, el: Tag, style_str: str = "") -> tuple[bool, str | None]:
         if not style_str:
-            style_str = (el.get("style", "") or "").lower()
-        color_m = re.search(r'color\s*:\s*([^;]+)', style_str)
-        bg_m = re.search(r'background-color\s*:\s*([^;]+)', style_str)
+            style_str = str(el.get("style", "") or "").lower()
+        color_m = re.search(r"color\s*:\s*([^;]+)", style_str)
+        bg_m = re.search(r"background-color\s*:\s*([^;]+)", style_str)
 
         if color_m and bg_m:
             color = color_m.group(1).strip()
@@ -167,7 +168,7 @@ class HiddenTextDetector(BaseDetector):
 
     def _check_zero_width(self, soup: BeautifulSoup, source_url: str) -> list[Finding]:
         findings = []
-        zw_chars = {"\u200B", "\u200C", "\u200D", "\uFEFF", "\u2060", "\u2061", "\u2062", "\u2063", "\u2064"}
+        zw_chars = {"\u200b", "\u200c", "\u200d", "\ufeff", "\u2060", "\u2061", "\u2062", "\u2063", "\u2064"}
         all_text = soup.get_text()
         found_chars = {c for c in zw_chars if c in all_text}
 
@@ -184,17 +185,19 @@ class HiddenTextDetector(BaseDetector):
                             is_hidden=True,
                             hidden_method="zero-width-characters",
                         )
-                        findings.append(Finding(
-                            detector=self.name,
-                            severity="medium",
-                            confidence=0.9,
-                            title="Zero-width characters detected",
-                            description=f"Found {len(found_chars)} zero-width character types in text.",
-                            snippet=repr(text)[:300],
-                            text_nodes=[node],
-                            category="hidden_instruction",
-                            recommendation="Strip zero-width characters from content.",
-                        ))
+                        findings.append(
+                            Finding(
+                                detector=self.name,
+                                severity="medium",
+                                confidence=0.9,
+                                title="Zero-width characters detected",
+                                description=f"Found {len(found_chars)} zero-width character types in text.",
+                                snippet=repr(text)[:300],
+                                text_nodes=[node],
+                                category="hidden_instruction",
+                                recommendation="Strip zero-width characters from content.",
+                            )
+                        )
                         break  # One finding per page is enough
 
         return findings
@@ -212,17 +215,19 @@ class HiddenTextDetector(BaseDetector):
                 is_hidden=True,
                 hidden_method="html-comment",
             )
-            findings.append(Finding(
-                detector=self.name,
-                severity="low",
-                confidence=0.7,
-                title="HTML comment with text",
-                description=f"HTML comment contains {len(text)} characters of text.",
-                snippet=text[:300],
-                text_nodes=[node],
-                category="hidden_instruction",
-                recommendation="Review HTML comments for hidden instructions.",
-            ))
+            findings.append(
+                Finding(
+                    detector=self.name,
+                    severity="low",
+                    confidence=0.7,
+                    title="HTML comment with text",
+                    description=f"HTML comment contains {len(text)} characters of text.",
+                    snippet=text[:300],
+                    text_nodes=[node],
+                    category="hidden_instruction",
+                    recommendation="Review HTML comments for hidden instructions.",
+                )
+            )
 
         return findings
 

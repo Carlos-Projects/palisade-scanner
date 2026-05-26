@@ -180,17 +180,19 @@ class InjectionPatternMatcher(BaseDetector):
                             visible=not self._is_hidden_in_dom(soup, selector),
                             provenance=source_url,
                         )
-                        findings.append(Finding(
-                            detector=self.name,
-                            severity=severity_map.get(category, "medium"),
-                            confidence=0.9,
-                            title=f"{category.replace('_', ' ').title()} pattern detected",
-                            description=f"Matched {category} pattern: {pattern.pattern[:60]}",
-                            snippet=m.group()[:300],
-                            text_nodes=[node],
-                            category=category,
-                            recommendation=f"Review and sanitize the {category} instruction.",
-                        ))
+                        findings.append(
+                            Finding(
+                                detector=self.name,
+                                severity=severity_map.get(category, "medium"),  # type: ignore[arg-type]
+                                confidence=0.9,
+                                title=f"{category.replace('_', ' ').title()} pattern detected",
+                                description=f"Matched {category} pattern: {pattern.pattern[:60]}",
+                                snippet=m.group()[:300],
+                                text_nodes=[node],
+                                category=category,
+                                recommendation=f"Review and sanitize the {category} instruction.",
+                            )
+                        )
 
         base64_findings = self._check_base64(all_text)
         findings.extend(base64_findings)
@@ -199,22 +201,24 @@ class InjectionPatternMatcher(BaseDetector):
 
     def _check_base64(self, text: str) -> list[Finding]:
         findings = []
-        b64_pattern = re.compile(r'(?:[A-Za-z0-9+/]{20,}={0,2})')
+        b64_pattern = re.compile(r"(?:[A-Za-z0-9+/]{20,}={0,2})")
         for m in b64_pattern.finditer(text):
             candidate = m.group()
             try:
                 decoded = base64.b64decode(candidate).decode("utf-8", errors="ignore")
                 if any(kw in decoded.lower() for kw in ["ignore", "instruction", "agent", "system", "you are"]):
-                    findings.append(Finding(
-                        detector=self.name,
-                        severity="critical",
-                        confidence=0.8,
-                        title="Base64 encoded instruction detected",
-                        description="Base64 string decodes to content containing instruction keywords.",
-                        snippet=decoded[:300],
-                        category="hidden_instruction",
-                        recommendation="Decode and review the Base64 content.",
-                    ))
+                    findings.append(
+                        Finding(
+                            detector=self.name,
+                            severity="critical",
+                            confidence=0.8,
+                            title="Base64 encoded instruction detected",
+                            description="Base64 string decodes to content containing instruction keywords.",
+                            snippet=decoded[:300],
+                            category="hidden_instruction",
+                            recommendation="Decode and review the Base64 content.",
+                        )
+                    )
             except Exception:
                 pass
         return findings
@@ -227,7 +231,7 @@ class InjectionPatternMatcher(BaseDetector):
             el = soup.select_one(selector)
             if not el:
                 return False
-            style = (el.get("style", "") or "").lower()
+            style = str(el.get("style", "") or "").lower()
             if "display:none" in style or "visibility:hidden" in style:
                 return True
         except Exception:

@@ -12,15 +12,26 @@ if TYPE_CHECKING:
     pass
 
 BIDI_CHARS = {
-    "\u202A": "LRE", "\u202B": "RLE", "\u202C": "PDF",
-    "\u202D": "LRO", "\u202E": "RLO", "\u2066": "LRI",
-    "\u2067": "RLI", "\u2068": "FSI", "\u2069": "PDI",
+    "\u202a": "LRE",
+    "\u202b": "RLE",
+    "\u202c": "PDF",
+    "\u202d": "LRO",
+    "\u202e": "RLO",
+    "\u2066": "LRI",
+    "\u2067": "RLI",
+    "\u2068": "FSI",
+    "\u2069": "PDI",
 }
 
 ZERO_WIDTH_CHARS = {
-    "\u200B": "ZWSP", "\u200C": "ZWNJ", "\u200D": "ZWJ",
-    "\uFEFF": "BOM", "\u2060": "WJ",
-    "\u2061": "FUNCTION", "\u2062": "TIMES", "\u2063": "INVISIBLE_SEPARATOR",
+    "\u200b": "ZWSP",
+    "\u200c": "ZWNJ",
+    "\u200d": "ZWJ",
+    "\ufeff": "BOM",
+    "\u2060": "WJ",
+    "\u2061": "FUNCTION",
+    "\u2062": "TIMES",
+    "\u2063": "INVISIBLE_SEPARATOR",
     "\u2064": "INVISIBLE_PLUS",
 }
 
@@ -28,23 +39,55 @@ VARIATION_SELECTORS = set(chr(0xFE00 + i) for i in range(16)) | set(chr(0xE0100 
 
 TAG_CHARS = set(chr(0xE0000 + i) for i in range(128))
 
-COMBINING_DIACRITICS = set(chr(c) for c in range(0x0300, 0x036F + 1)) | \
-                       set(chr(c) for c in range(0x1DC0, 0x1DFF + 1)) | \
-                       set(chr(c) for c in range(0xFE20, 0xFE2F + 1)) | \
-                       set(chr(c) for c in range(0x20D0, 0x20FF + 1))
+COMBINING_DIACRITICS = (
+    set(chr(c) for c in range(0x0300, 0x036F + 1))
+    | set(chr(c) for c in range(0x1DC0, 0x1DFF + 1))
+    | set(chr(c) for c in range(0xFE20, 0xFE2F + 1))
+    | set(chr(c) for c in range(0x20D0, 0x20FF + 1))
+)
 
 NONSTANDARD_WHITESPACE = {
-    "\u2000", "\u2001", "\u2002", "\u2003", "\u2004", "\u2005",
-    "\u2006", "\u2007", "\u2008", "\u2009", "\u200A",
-    "\u2028", "\u2029", "\u202F", "\u205F", "\u00A0", "\u1680", "\u3000",
-    "\u180E", "\u3164", "\u2800",
+    "\u2000",
+    "\u2001",
+    "\u2002",
+    "\u2003",
+    "\u2004",
+    "\u2005",
+    "\u2006",
+    "\u2007",
+    "\u2008",
+    "\u2009",
+    "\u200a",
+    "\u2028",
+    "\u2029",
+    "\u202f",
+    "\u205f",
+    "\u00a0",
+    "\u1680",
+    "\u3000",
+    "\u180e",
+    "\u3164",
+    "\u2800",
 }
 
 CYRILLIC_HOMOGLYPHS: dict[str, str] = {
-    "а": "a", "е": "e", "о": "o", "р": "p", "с": "c",
-    "у": "y", "х": "x", "і": "i", "һ": "h", "ө": "o",
-    "ԛ": "q", "в": "b", "к": "k", "н": "h", "м": "m",
-    "т": "t", "з": "z",
+    "а": "a",
+    "е": "e",
+    "о": "o",
+    "р": "p",
+    "с": "c",
+    "у": "y",
+    "х": "x",
+    "і": "i",
+    "һ": "h",
+    "ө": "o",
+    "ԛ": "q",
+    "в": "b",
+    "к": "k",
+    "н": "h",
+    "м": "m",
+    "т": "t",
+    "з": "z",
 }
 
 
@@ -88,11 +131,12 @@ class AdvancedUnicodeDetector(BaseDetector):
 
         return findings
 
-    def _make_finding(self, title: str, desc: str, snippet: str, severity: str,
-                      category: str, soup: BeautifulSoup) -> Finding:
+    def _make_finding(
+        self, title: str, desc: str, snippet: str, severity: str, category: str, soup: BeautifulSoup
+    ) -> Finding:
         return Finding(
             detector=self.name,
-            severity=severity,
+            severity=severity,  # type: ignore[arg-type]
             confidence=0.85,
             title=title,
             description=desc,
@@ -106,22 +150,39 @@ class AdvancedUnicodeDetector(BaseDetector):
         if not found:
             return []
         desc = f"Found {len(found)} bidi override characters: {', '.join(found.values())}"
-        return [self._make_finding("Bidi override characters detected", desc, text[:200],
-                                    "high", "unicode_stego", soup)]
+        return [
+            self._make_finding("Bidi override characters detected", desc, text[:200], "high", "unicode_stego", soup)
+        ]
 
     def _check_variation_selectors(self, text: str, soup: BeautifulSoup) -> list[Finding]:
         count = sum(1 for ch in text if ch in VARIATION_SELECTORS)
         if count < 5:
             return []
-        return [self._make_finding(f"Variation selectors ({count})", f"Found {count} variation selectors, potential stego channel",
-                                    text[:200], "medium", "unicode_stego", soup)]
+        return [
+            self._make_finding(
+                f"Variation selectors ({count})",
+                f"Found {count} variation selectors, potential stego channel",
+                text[:200],
+                "medium",
+                "unicode_stego",
+                soup,
+            )
+        ]
 
     def _check_tag_chars(self, text: str, soup: BeautifulSoup) -> list[Finding]:
         count = sum(1 for ch in text if ch in TAG_CHARS)
         if count == 0:
             return []
-        return [self._make_finding(f"Tag characters ({count})", f"Found {count} invisible tag characters, used for steganography",
-                                    text[:200], "high", "unicode_stego", soup)]
+        return [
+            self._make_finding(
+                f"Tag characters ({count})",
+                f"Found {count} invisible tag characters, used for steganography",
+                text[:200],
+                "high",
+                "unicode_stego",
+                soup,
+            )
+        ]
 
     def _check_zalgo(self, text: str, soup: BeautifulSoup) -> list[Finding]:
         segments = []
@@ -140,21 +201,36 @@ class AdvancedUnicodeDetector(BaseDetector):
 
         if not segments and count < 10:
             return []
-        return [self._make_finding(f"Combining diacritics / Zalgo text ({count})",
-                                    f"Found {count} combining characters suggesting Zalgo text encoding. Segments: {len(segments)}",
-                                    text[:200], "medium", "unicode_zalgo", soup)]
+        return [
+            self._make_finding(
+                f"Combining diacritics / Zalgo text ({count})",
+                f"Found {count} combining characters suggesting Zalgo text encoding. Segments: {len(segments)}",
+                text[:200],
+                "medium",
+                "unicode_zalgo",
+                soup,
+            )
+        ]
 
     def _check_nonstandard_whitespace(self, text: str, soup: BeautifulSoup) -> list[Finding]:
         found = {ch for ch in text if ch in NONSTANDARD_WHITESPACE}
         if not found:
             return []
         names = [unicodedata.name(ch, "UNKNOWN") for ch in sorted(found)]
-        return [self._make_finding(f"Non-standard whitespace ({len(found)} types)",
-                                    f"Found unusual whitespace: {', '.join(names[:5])}",
-                                    text[:200], "low", "unicode_stego", soup)]
+        return [
+            self._make_finding(
+                f"Non-standard whitespace ({len(found)} types)",
+                f"Found unusual whitespace: {', '.join(names[:5])}",
+                text[:200],
+                "low",
+                "unicode_stego",
+                soup,
+            )
+        ]
 
     def _check_homoglyphs(self, text: str, soup: BeautifulSoup) -> list[Finding]:
         import re
+
         cyrillic_pattern = re.compile("[" + "".join(CYRILLIC_HOMOGLYPHS.keys()) + "]", re.UNICODE)
         matches = []
         for el in soup.find_all(string=True):
@@ -170,6 +246,13 @@ class AdvancedUnicodeDetector(BaseDetector):
 
         if not matches:
             return []
-        return [self._make_finding(f"Cyrillic homoglyphs ({len(matches)} occurrences)",
-                                    f"Found Cyrillic characters that look like Latin: {matches[0][1]}",
-                                    matches[0][0], "medium", "homoglyph_bypass", soup)]
+        return [
+            self._make_finding(
+                f"Cyrillic homoglyphs ({len(matches)} occurrences)",
+                f"Found Cyrillic characters that look like Latin: {matches[0][1]}",
+                matches[0][0],
+                "medium",
+                "homoglyph_bypass",
+                soup,
+            )
+        ]

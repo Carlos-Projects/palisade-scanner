@@ -86,7 +86,7 @@ def scan(
         raise typer.Exit(1)
 
     if reputation and url:
-        info = rep.query(url)
+        info = rep.query(url)  # type: ignore[union-attr]
         console.print(f"\n[bold]Reputation:[/] {info['trust_level']} (score: {info['score']:.0f}/100)")
 
     if ci:
@@ -120,6 +120,7 @@ def policies(
 
 # ─── Monitor ──────────────────────────────────────────────────────────────
 
+
 @app.command()
 def monitor(
     url: str = typer.Argument(None, help="URL to start monitoring"),
@@ -145,8 +146,13 @@ def monitor(
         table.add_column("Scans")
         table.add_column("Last Scan")
         for e in entries:
-            table.add_row(e["url"], str(e["last_risk_score"]), e["last_risk_category"],
-                          str(e["total_scans"]), e.get("last_scan_at", "never"))
+            table.add_row(
+                e["url"],
+                str(e["last_risk_score"]),
+                e["last_risk_category"],
+                str(e["total_scans"]),
+                e.get("last_scan_at", "never"),
+            )
         console.print(table)
         return
 
@@ -169,6 +175,7 @@ def monitor(
 
 # ─── Proxy ────────────────────────────────────────────────────────────────
 
+
 @app.command()
 def proxy(
     port: int = typer.Option(9090, "--port", "-p", help="Proxy port"),
@@ -176,11 +183,13 @@ def proxy(
 ):
     """Run the Content Safety Proxy server."""
     from scanner.proxy.server import run_proxy
+
     console.print(f"[green]Starting Content Safety Proxy on :{port} (mode: {mode})[/]")
     run_proxy(port=port, mode=mode)
 
 
 # ─── Validate ─────────────────────────────────────────────────────────────
+
 
 @app.command()
 def validate(
@@ -222,6 +231,7 @@ def validate(
 
 # ─── Reputation ──────────────────────────────────────────────────────────
 
+
 @app.command()
 def reputation(
     url: str = typer.Argument(None, help="URL to query reputation for"),
@@ -257,6 +267,7 @@ def reputation(
 
 
 # ─── Red Team ────────────────────────────────────────────────────────────
+
 
 @app.command()
 def redteam(
@@ -297,6 +308,7 @@ def redteam(
 
 
 # ─── Certification ───────────────────────────────────────────────────────
+
 
 @app.command()
 def certify(
@@ -344,6 +356,7 @@ def certify(
 
 # ─── Web ─────────────────────────────────────────────────────────────────
 
+
 @app.command()
 def web(
     port: int = typer.Option(8000, "--port", "-p", help="Web UI port"),
@@ -353,22 +366,26 @@ def web(
     import uvicorn
 
     from scanner.api import app as web_app
+
     console.print(f"[green]Web UI:[/] http://{host}:{port}")
     uvicorn.run(web_app, host=host, port=port)
 
 
 # ─── Rich Display ────────────────────────────────────────────────────────
 
+
 def _display_rich(report, verbose: bool = False):
     color_map = {"none": "green", "low": "yellow", "medium": "orange1", "high": "red", "critical": "bold red"}
     color = color_map.get(report.risk_category, "white")
-    console.print(Panel(
-        f"[bold]Risk Score:[/] [{color}]{report.risk_score}/100 ({report.risk_category})[/]\n"
-        f"[bold]URL:[/] {report.url}\n"
-        f"[bold]Findings:[/] {report.total_findings} | "
-        f"[bold]Time:[/] {report.scan_time_ms}ms",
-        title="Scan Results",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Risk Score:[/] [{color}]{report.risk_score}/100 ({report.risk_category})[/]\n"
+            f"[bold]URL:[/] {report.url}\n"
+            f"[bold]Findings:[/] {report.total_findings} | "
+            f"[bold]Time:[/] {report.scan_time_ms}ms",
+            title="Scan Results",
+        )
+    )
 
     if report.summary:
         console.print(Panel(report.summary, title="Summary"))

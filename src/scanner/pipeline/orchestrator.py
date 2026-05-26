@@ -77,20 +77,22 @@ class PipelineOrchestrator:
             try:
                 return await detector.detect(soup, source_url)
             except Exception as e:
-                return [Finding(
-                    detector=detector.name,
-                    severity="info",
-                    confidence=0.0,
-                    title=f"Detector error: {detector.name}",
-                    description=str(e),
-                    category="system_error",
-                )]
+                return [
+                    Finding(
+                        detector=detector.name,
+                        severity="info",
+                        confidence=0.0,
+                        title=f"Detector error: {detector.name}",
+                        description=str(e),
+                        category="system_error",
+                    )
+                ]
 
         results = await asyncio.gather(*[_run_detector(d) for d in pattern_detectors], return_exceptions=True)
         for r in results:
             if isinstance(r, Exception):
                 continue
-            all_findings.extend(r)
+            all_findings.extend(r)  # type: ignore[arg-type]
 
         # Phase 2: Run LLM classifier on findings (if configured)
         llm_detector = next(
@@ -99,7 +101,7 @@ class PipelineOrchestrator:
         )
         if llm_detector and self.s.llm_api_key:
             try:
-                enriched = await llm_detector.classify_findings(all_findings)
+                enriched = await llm_detector.classify_findings(all_findings)  # type: ignore[attr-defined]
                 enriched_ids = {f.id for f in enriched}
                 all_findings = enriched + [f for f in all_findings if f.id not in enriched_ids]
             except Exception as e:
@@ -114,7 +116,7 @@ class PipelineOrchestrator:
             url=source_url,
             total_findings=len(all_findings),
             risk_score=risk_score,
-            risk_category=risk_category,
+            risk_category=risk_category,  # type: ignore[arg-type]
             findings=all_findings,
             summary=self._generate_summary(risk_score, risk_category, all_findings),
             scan_time_ms=elapsed,

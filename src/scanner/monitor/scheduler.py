@@ -59,8 +59,9 @@ class MonitorScheduler:
         self._tasks[entry["id"]] = job_id
         logger.info(f"Scheduled monitor for {entry['url']} every {interval}h")
 
-    async def add_url(self, url: str, interval_hours: float = 6,
-                      label: str = "", webhook: str = "", tags: list[str] | None = None):
+    async def add_url(
+        self, url: str, interval_hours: float = 6, label: str = "", webhook: str = "", tags: list[str] | None = None
+    ):
         url_id = self.store.add_url(url, interval_hours, label, webhook, tags)
         if url_id > 0:
             entry = self.store.get_url(url_id)
@@ -92,7 +93,7 @@ class MonitorScheduler:
                     severity=report.risk_category,
                     message=score_change,
                 )
-                await self.alerter.dispatch(alert)
+                await self.alerter.dispatch(alert)  # type: ignore[arg-type]
 
             if report.risk_score >= 40:
                 alert = self.store.create_alert(
@@ -101,7 +102,7 @@ class MonitorScheduler:
                     severity=report.risk_category,
                     message=f"Risk score {report.risk_score}/100 ({report.risk_category}): {report.summary}",
                 )
-                await self.alerter.dispatch(alert)
+                await self.alerter.dispatch(alert)  # type: ignore[arg-type]
 
         except Exception as e:
             logger.error(f"Monitor scan failed for {url}: {e}")

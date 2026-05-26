@@ -72,8 +72,9 @@ class MonitorStore:
             CREATE INDEX IF NOT EXISTS idx_alerts_pending ON alerts(delivered, created_at);
         """)
 
-    def add_url(self, url: str, interval_hours: float = 6, label: str = "",
-                webhook: str = "", tags: list[str] | None = None) -> int:
+    def add_url(
+        self, url: str, interval_hours: float = 6, label: str = "", webhook: str = "", tags: list[str] | None = None
+    ) -> int:
         c = self.conn
         c.execute(
             "INSERT OR IGNORE INTO monitored_urls (url, label, interval_hours, alert_webhook, tags) VALUES (?, ?, ?, ?, ?)",
@@ -116,9 +117,13 @@ class MonitorStore:
             """INSERT INTO scan_history (url_id, risk_score, risk_category, total_findings,
                findings_json, scan_time_ms, diff_summary) VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (
-                url_id, report.risk_score, report.risk_category, report.total_findings,
-                json.dumps([f.model_dump(mode="json", default=str) for f in report.findings]),
-                report.scan_time_ms, diff,
+                url_id,
+                report.risk_score,
+                report.risk_category,
+                report.total_findings,
+                json.dumps([f.model_dump(mode="json") for f in report.findings]),
+                report.scan_time_ms,
+                diff,
             ),
         )
 

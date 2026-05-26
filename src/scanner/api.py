@@ -98,13 +98,13 @@ async def scan_url(
 @app.get("/api/scan")
 async def api_scan(url: str = Query(..., description="URL to scan")):
     report = await orchestrator.scan_url(url)
-    return JSONResponse(report.model_dump(mode="json", default=str))
+    return JSONResponse(report.model_dump(mode="json"))
 
 
 @app.get("/api/scan/{url:path}")
 async def api_scan_path(url: str):
     report = await orchestrator.scan_url(url)
-    return JSONResponse(report.model_dump(mode="json", default=str))
+    return JSONResponse(report.model_dump(mode="json"))
 
 
 @app.get("/api/policies")
@@ -162,7 +162,7 @@ async def api_monitor_history(url_id: int = Query(...), limit: int = Query(50)):
 
 @app.get("/api/proxy")
 async def api_proxy(url: str = Query(...), mode: str = Query("strip")):
-    proxy = ContentSafetyProxy(orchestrator=orchestrator, mode=mode)
+    proxy = ContentSafetyProxy(orchestrator=orchestrator, mode=mode)  # type: ignore[arg-type]
     content, content_type, scan = await proxy.handle(url)
     return JSONResponse(
         {
@@ -195,7 +195,7 @@ async def api_redteam_evaluate(template: str = Form("ecommerce"), count: int = F
     evaluator = ScannerEvaluator(orchestrator)
     pages = [gen.generate(template=template) for _ in range(count)]
     result = await evaluator.evaluate(pages)
-    return result.model_dump(mode="json", default=str)
+    return result.model_dump(mode="json")
 
 
 # ─── Certification ──────────────────────────────────────────────────────

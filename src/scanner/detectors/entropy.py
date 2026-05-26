@@ -33,8 +33,8 @@ class EntropyAnalyzer(BaseDetector):
     # Threshold for ASCII ratio (how much of the content is printable ASCII)
     ASCII_RATIO_THRESHOLD = 0.6
 
-    BASE64_PATTERN = re.compile(r'(?:[A-Za-z0-9+/]{30,}={0,2})')
-    HEX_PATTERN = re.compile(r'(?:[0-9A-Fa-f]{32,})')
+    BASE64_PATTERN = re.compile(r"(?:[A-Za-z0-9+/]{30,}={0,2})")
+    HEX_PATTERN = re.compile(r"(?:[0-9A-Fa-f]{32,})")
 
     async def detect(self, soup: BeautifulSoup, source_url: str = "") -> list[Finding]:
         findings: list[Finding] = []
@@ -50,33 +50,42 @@ class EntropyAnalyzer(BaseDetector):
             ascii_ratio = self._ascii_ratio(text)
 
             if entropy >= self.ENTROPY_THRESHOLD and ascii_ratio < self.ASCII_RATIO_THRESHOLD:
-                findings.append(self._finding(
-                    severity="high",
-                    title=f"High entropy content ({entropy:.1f})",
-                    desc=f"Shannon entropy {entropy:.1f}, ASCII ratio {ascii_ratio:.0%}. Possible encoded payload.",
-                    snippet=text,
-                ))
+                findings.append(
+                    self._finding(
+                        severity="high",
+                        title=f"High entropy content ({entropy:.1f})",
+                        desc=f"Shannon entropy {entropy:.1f}, ASCII ratio {ascii_ratio:.0%}. Possible encoded payload.",
+                        snippet=text,
+                    )
+                )
 
         # Check for base64-like strings
         for m in self.BASE64_PATTERN.finditer(all_text):
             try:
                 import base64
+
                 decoded = base64.b64decode(m.group()).decode("utf-8", errors="replace")
-                if any(kw in decoded.lower() for kw in ["ignore", "instruction", "system",
-                                                        "you are", "override", "disregard"]):
-                    findings.append(self._finding(
-                        severity="critical",
-                        title="Base64 encoded instruction detected",
-                        desc="Base64 decodes to content containing instruction keywords.",
-                        snippet=decoded[:300],
-                    ))
+                if any(
+                    kw in decoded.lower()
+                    for kw in ["ignore", "instruction", "system", "you are", "override", "disregard"]
+                ):
+                    findings.append(
+                        self._finding(
+                            severity="critical",
+                            title="Base64 encoded instruction detected",
+                            desc="Base64 decodes to content containing instruction keywords.",
+                            snippet=decoded[:300],
+                        )
+                    )
                 elif len(m.group()) >= 40:
-                    findings.append(self._finding(
-                        severity="low",
-                        title=f"Base64-like string ({len(m.group())} chars)",
-                        desc=f"Base64-like string, decodes to: {decoded[:80]}",
-                        snippet=m.group()[:200],
-                    ))
+                    findings.append(
+                        self._finding(
+                            severity="low",
+                            title=f"Base64-like string ({len(m.group())} chars)",
+                            desc=f"Base64-like string, decodes to: {decoded[:80]}",
+                            snippet=m.group()[:200],
+                        )
+                    )
             except Exception:
                 pass
 
@@ -85,12 +94,14 @@ class EntropyAnalyzer(BaseDetector):
             try:
                 decoded = bytes.fromhex(m.group()).decode("utf-8", errors="replace")
                 if any(kw in decoded.lower() for kw in ["ignore", "instruction", "system"]):
-                    findings.append(self._finding(
-                        severity="critical",
-                        title="Hex encoded instruction detected",
-                        desc="Hex decodes to content containing instruction keywords.",
-                        snippet=decoded[:300],
-                    ))
+                    findings.append(
+                        self._finding(
+                            severity="critical",
+                            title="Hex encoded instruction detected",
+                            desc="Hex decodes to content containing instruction keywords.",
+                            snippet=decoded[:300],
+                        )
+                    )
             except Exception:
                 pass
 
@@ -99,7 +110,7 @@ class EntropyAnalyzer(BaseDetector):
     def _finding(self, severity: str, title: str, desc: str, snippet: str) -> Finding:
         return Finding(
             detector=self.name,
-            severity=severity,
+            severity=severity,  # type: ignore[arg-type]
             confidence=0.85,
             title=title,
             description=desc,

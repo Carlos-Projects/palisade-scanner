@@ -73,19 +73,18 @@ class ReputationEngine:
         has_https = parsed.scheme == "https"
 
         cat_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
-        type_counts = {}
+        type_counts: dict[str, int] = {}
         for f in report.findings:
             cat_counts[f.severity] = cat_counts.get(f.severity, 0) + 1
             if f.category:
                 type_counts[f.category] = type_counts.get(f.category, 0) + 1
 
         c = self.conn
-        existing = c.execute(
-            "SELECT * FROM reputation WHERE domain = ? AND path = ?", (domain, path)
-        ).fetchone()
+        existing = c.execute("SELECT * FROM reputation WHERE domain = ? AND path = ?", (domain, path)).fetchone()
 
         if existing:
-            c.execute("""
+            c.execute(
+                """
                 UPDATE reputation SET
                     total_scans = total_scans + 1,
                     total_findings = total_findings + ?,
@@ -103,18 +102,28 @@ class ReputationEngine:
                     tool_manipulation_count = tool_manipulation_count + ?,
                     score = ?
                 WHERE domain = ? AND path = ?
-            """, (
-                report.total_findings, report.total_findings,
-                cat_counts["critical"], cat_counts["high"],
-                cat_counts["medium"], cat_counts["low"],
-                type_counts.get("jailbreak", 0), type_counts.get("exfiltration", 0),
-                type_counts.get("impersonation", 0), type_counts.get("hidden_instruction", 0),
-                type_counts.get("role_override", 0), type_counts.get("tool_manipulation", 0),
-                0,  # placeholder, recalculated below
-                domain, path,
-            ))
+            """,
+                (
+                    report.total_findings,
+                    report.total_findings,
+                    cat_counts["critical"],
+                    cat_counts["high"],
+                    cat_counts["medium"],
+                    cat_counts["low"],
+                    type_counts.get("jailbreak", 0),
+                    type_counts.get("exfiltration", 0),
+                    type_counts.get("impersonation", 0),
+                    type_counts.get("hidden_instruction", 0),
+                    type_counts.get("role_override", 0),
+                    type_counts.get("tool_manipulation", 0),
+                    0,  # placeholder, recalculated below
+                    domain,
+                    path,
+                ),
+            )
         else:
-            c.execute("""
+            c.execute(
+                """
                 INSERT INTO reputation (domain, path, trust_level, total_scans, total_findings,
                     last_scan_at, last_finding_at, critical_findings, high_findings,
                     medium_findings, low_findings, jailbreak_count, exfiltration_count,
@@ -123,22 +132,31 @@ class ReputationEngine:
                 VALUES (?, ?, 'unknown', 1, ?, datetime('now'),
                     CASE WHEN ? > 0 THEN datetime('now') ELSE NULL END,
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                domain, path, report.total_findings, report.total_findings,
-                cat_counts["critical"], cat_counts["high"], cat_counts["medium"],
-                cat_counts["low"], type_counts.get("jailbreak", 0),
-                type_counts.get("exfiltration", 0), type_counts.get("impersonation", 0),
-                type_counts.get("hidden_instruction", 0), type_counts.get("role_override", 0),
-                type_counts.get("tool_manipulation", 0), int(has_https),
-            ))
+            """,
+                (
+                    domain,
+                    path,
+                    report.total_findings,
+                    report.total_findings,
+                    cat_counts["critical"],
+                    cat_counts["high"],
+                    cat_counts["medium"],
+                    cat_counts["low"],
+                    type_counts.get("jailbreak", 0),
+                    type_counts.get("exfiltration", 0),
+                    type_counts.get("impersonation", 0),
+                    type_counts.get("hidden_instruction", 0),
+                    type_counts.get("role_override", 0),
+                    type_counts.get("tool_manipulation", 0),
+                    int(has_https),
+                ),
+            )
 
         self._recalculate(domain, path)
         self.conn.commit()
 
     def _recalculate(self, domain: str, path: str):
-        row = self.conn.execute(
-            "SELECT * FROM reputation WHERE domain = ? AND path = ?", (domain, path)
-        ).fetchone()
+        row = self.conn.execute("SELECT * FROM reputation WHERE domain = ? AND path = ?", (domain, path)).fetchone()
         if not row:
             return
 
@@ -170,25 +188,24 @@ class ReputationEngine:
         )
 
         if old_trust != new_trust:
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 INSERT INTO reputation_history (domain, path, old_trust_level, new_trust_level,
                     old_score, new_score, reason)
                 VALUES (?, ?, ?, ?, ?, ?, 'auto')
-            """, (domain, path, old_trust, new_trust, row["score"] or 0, score))
+            """,
+                (domain, path, old_trust, new_trust, row["score"] or 0, score),
+            )
 
     def query(self, url: str) -> dict:
         parsed = urlparse(url)
         domain = parsed.netloc or parsed.path
         path = parsed.path or "/"
 
-        row = self.conn.execute(
-            "SELECT * FROM reputation WHERE domain = ? AND path = ?", (domain, path)
-        ).fetchone()
+        row = self.conn.execute("SELECT * FROM reputation WHERE domain = ? AND path = ?", (domain, path)).fetchone()
 
         if not row:
-            row = self.conn.execute(
-                "SELECT * FROM reputation WHERE domain = ? AND path = ''", (domain,)
-            ).fetchone()
+            row = self.conn.execute("SELECT * FROM reputation WHERE domain = ? AND path = ''", (domain,)).fetchone()
 
         if row:
             history = self.conn.execute(
@@ -209,7 +226,8 @@ class ReputationEngine:
         return {"url": url, "domain": domain, "trust_level": "unknown", "score": 0.0}
 
     def recent_threats(self, hours: int = 24) -> list[dict]:
-        rows = self.conn.execute("""
+        rows = self.conn.execute(
+            """
             SELECT domain, path, trust_level, score, total_scans, total_findings,
                    last_finding_at, critical_findings
             FROM reputation
@@ -217,5 +235,7 @@ class ReputationEngine:
               AND critical_findings > 0
             ORDER BY critical_findings DESC
             LIMIT 50
-        """, (f"-{hours} hours",)).fetchall()
+        """,
+            (f"-{hours} hours",),
+        ).fetchall()
         return [dict(r) for r in rows]

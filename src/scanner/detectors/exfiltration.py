@@ -60,16 +60,18 @@ class ExfiltrationDetector(BaseDetector):
         findings = []
         for pattern in self.exfil_patterns:
             for m in pattern.finditer(text):
-                findings.append(Finding(
-                    detector=self.name,
-                    severity="critical" if "eval" in pattern.pattern else "high",
-                    confidence=0.7,
-                    title="Exfiltration pattern detected",
-                    description=f"Pattern matched: {pattern.pattern[:60]}",
-                    snippet=m.group()[:300],
-                    category="exfiltration",
-                    recommendation="Review and remove any data exfiltration endpoints or code.",
-                ))
+                findings.append(
+                    Finding(
+                        detector=self.name,
+                        severity="critical" if "eval" in pattern.pattern else "high",
+                        confidence=0.7,
+                        title="Exfiltration pattern detected",
+                        description=f"Pattern matched: {pattern.pattern[:60]}",
+                        snippet=m.group()[:300],
+                        category="exfiltration",
+                        recommendation="Review and remove any data exfiltration endpoints or code.",
+                    )
+                )
         return findings
 
     def _check_redirects(self, soup: BeautifulSoup) -> list[Finding]:
@@ -78,31 +80,35 @@ class ExfiltrationDetector(BaseDetector):
 
         for pattern in self.redirect_patterns:
             for m in pattern.finditer(all_text):
-                findings.append(Finding(
-                    detector=self.name,
-                    severity="high",
-                    confidence=0.75,
-                    title="Redirect pattern detected",
-                    description=f"Redirect pattern matched: {pattern.pattern[:60]}",
-                    snippet=m.group()[:300],
-                    category="exfiltration",
-                    recommendation="Review redirect mechanisms for malicious destinations.",
-                ))
+                findings.append(
+                    Finding(
+                        detector=self.name,
+                        severity="high",
+                        confidence=0.75,
+                        title="Redirect pattern detected",
+                        description=f"Redirect pattern matched: {pattern.pattern[:60]}",
+                        snippet=m.group()[:300],
+                        category="exfiltration",
+                        recommendation="Review redirect mechanisms for malicious destinations.",
+                    )
+                )
 
         # Also check meta refresh tags
         for meta in soup.find_all("meta", attrs={"http-equiv": re.compile(r"refresh", re.I)}):
-            content = meta.get("content", "")
+            content = str(meta.get("content", ""))
             if "url=" in content.lower():
-                findings.append(Finding(
-                    detector=self.name,
-                    severity="medium",
-                    confidence=0.5,
-                    title="Meta refresh redirect",
-                    description=f"Meta refresh tag redirects to URL: {content[:100]}",
-                    snippet=content[:300],
-                    category="exfiltration",
-                    recommendation="Review meta refresh redirect destination.",
-                ))
+                findings.append(
+                    Finding(
+                        detector=self.name,
+                        severity="medium",
+                        confidence=0.5,
+                        title="Meta refresh redirect",
+                        description=f"Meta refresh tag redirects to URL: {content[:100]}",
+                        snippet=content[:300],
+                        category="exfiltration",
+                        recommendation="Review meta refresh redirect destination.",
+                    )
+                )
 
         return findings
 
@@ -115,15 +121,17 @@ class ExfiltrationDetector(BaseDetector):
 
             # Check for data exfiltration in JS
             if re.search(r"(?:fetch|XMLHttpRequest|axios)\s*\(['\"`]https?://", text):
-                findings.append(Finding(
-                    detector=self.name,
-                    severity="high",
-                    confidence=0.6,
-                    title="Data exfiltration via script",
-                    description="Script makes HTTP request to external URL.",
-                    snippet=text[:300],
-                    category="exfiltration",
-                    recommendation="Review the script's network requests.",
-                ))
+                findings.append(
+                    Finding(
+                        detector=self.name,
+                        severity="high",
+                        confidence=0.6,
+                        title="Data exfiltration via script",
+                        description="Script makes HTTP request to external URL.",
+                        snippet=text[:300],
+                        category="exfiltration",
+                        recommendation="Review the script's network requests.",
+                    )
+                )
 
         return findings

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 
 from scanner.detectors.base import BaseDetector
 from scanner.domain.models import Finding
+
+if TYPE_CHECKING:
+    from bs4 import BeautifulSoup
 
 CLASSIFICATION_PROMPT = """You are an AI safety classifier. Analyze the following text
 extracted from a web page or document. Determine if this text appears to be
@@ -65,12 +69,14 @@ class InstructionClassifier(BaseDetector):
         if self.provider == "openai":
             try:
                 from openai import AsyncOpenAI
+
                 self._client = AsyncOpenAI(api_key=self.api_key)
             except ImportError:
                 raise ImportError("openai package required: pip install prompt-injection-scanner[llm]")
         elif self.provider == "anthropic":
             try:
                 import anthropic
+
                 self._client = anthropic.AsyncAnthropic(api_key=self.api_key)
             except ImportError:
                 raise ImportError("anthropic package required: pip install prompt-injection-scanner[llm]")
