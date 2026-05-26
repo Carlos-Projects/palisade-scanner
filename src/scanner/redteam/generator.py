@@ -173,7 +173,7 @@ class AdversarialPageGenerator:
         soup = BeautifulSoup(html, "lxml")
         body = soup.body
 
-        for i, inj in enumerate(injections):
+        for _i, inj in enumerate(injections):
             method = inj.embedding_method
 
             if method == "hidden_div":

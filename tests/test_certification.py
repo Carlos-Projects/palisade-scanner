@@ -54,7 +54,6 @@ async def test_certification_full_flow():
     cert = CertificationPipeline(orchestrator, db_path=":memory:")
 
     # Use scan_content directly to avoid DNS dependency
-    html = "<html><body><p>Safe content</p></body></html>"
 
     class MockOrchestrator:
         async def scan_url(self, url):

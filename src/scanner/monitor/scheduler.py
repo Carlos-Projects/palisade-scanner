@@ -82,7 +82,7 @@ class MonitorScheduler:
 
         try:
             report = await self.orchestrator.scan_url(url)
-            scan_id = self.store.record_scan(entry["id"], report)
+            self.store.record_scan(entry["id"], report)
 
             score_change = self.diff.detect(entry, report)
             if score_change:

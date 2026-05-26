@@ -168,7 +168,7 @@ class ImageStegoDetector(BaseDetector):
         try:
             palette = img.getpalette()
             if palette and len(palette) > 768:
-                unique_colors = len(set(zip(palette[::3], palette[1::3], palette[2::3])))
+                unique_colors = len(set(zip(palette[::3], palette[1::3], palette[2::3], strict=False)))
                 if unique_colors < 50 and img.size[0] * img.size[1] > 1000:
                     return [Finding(
                         detector=self.name,

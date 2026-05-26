@@ -20,7 +20,7 @@ def _validate_url(url: str) -> str:
         raise ValueError("URL must have a hostname")
     try:
         addrs = socket.getaddrinfo(parsed.hostname, None)
-        for family, _, _, _, sockaddr in addrs:
+        for _family, _, _, _, sockaddr in addrs:
             ip = ipaddress.ip_address(sockaddr[0])
             if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast:
                 raise ValueError(f"URL resolves to private IP: {sockaddr[0]}")
