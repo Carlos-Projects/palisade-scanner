@@ -6,11 +6,21 @@
 [![CI](https://github.com/Carlos-Projects/palisade-scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlos-Projects/palisade-scanner/actions)
 [![HuggingFace Space](https://img.shields.io/badge/🤗%20Try%20it%20now-HF%20Spaces-yellow)](https://huggingface.co/spaces/Syntho/palisade-scanner)
 
-**[Try it live on HuggingFace Spaces](https://huggingface.co/spaces/Syntho/palisade-scanner)** — scan any URL without installing anything.
+**[Try it live on HuggingFace Spaces](https://huggingface.co/spaces/Syntho/palisade-scanner)** — paste a URL. Detect whether it contains hidden instructions targeting AI agents.
 
 **Scan web content for prompt injection, hidden instructions, and adversarial content targeting AI agents.**
 
 AI agents browse the web, read documents, and consume external content. Adversaries hide instructions in invisible text, HTML metadata, encoded payloads, and zero-width characters — Palisade finds them all.
+
+---
+
+### Risk examples
+
+| Scenario | Risk level | What Palisade finds |
+|----------|-----------|---------------------|
+| Clean marketing page | ✅ **Low** | No hidden text, no injection patterns, no exfiltration |
+| Hidden CSS prompt injection | 🔴 **High** | `display:none` text with role override instructions |
+| Metadata exfiltration prompt | 🚨 **Critical** | HTML comment + JSON-LD + base64-encoded data theft payload |
 
 ---
 
@@ -203,11 +213,22 @@ mcpguard load-rules rules.yaml
 - **v0.6** — Red Team Lab: adversarial page generator + benchmark suite
 - **v0.7** — Certification Pipeline: verified AgentSafe badges
 
-## Related Projects
+## Ecosystem
 
-- [MCPGuard](https://github.com/Carlos-Projects/mcpguard) — Runtime security proxy for MCP
-- [MCPwn](https://github.com/Carlos-Projects/mcpwn) — Offensive security testing for MCP
-- [MCPscop](https://github.com/Carlos-Projects/mcpscope) — Unified security dashboard
+Palisade Scanner is part of the **Carlos-Projects** security infrastructure for AI agents:
+
+```
+Palisade Scanner    →  Scan content before agents consume it.  ← you are here
+MCPwn               →  Attack MCP servers before attackers do.
+AgentGate           →  Control how agents access your website.
+MCPscop             →  Centralize scanner results and security posture.
+MCPGuard            →  Runtime security proxy for MCP/A2A protocols.
+```
+
+- [MCPwn](https://github.com/Carlos-Projects/mcpwn) — Offensive security testing for MCP servers
+- [AgentGate](https://github.com/Carlos-Projects/agentgate) — Policy-based firewall and honeypot middleware for AI agents
+- [MCPscop](https://github.com/Carlos-Projects/mcpscope) — Unified security dashboard for MCP/A2A scanner results
+- [MCPGuard](https://github.com/Carlos-Projects/mcpguard) — Runtime security proxy for MCP/A2A protocols
 
 ## License
 
