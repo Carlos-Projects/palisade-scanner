@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY pyproject.toml README.md ./
 COPY src/scanner ./src/scanner
+COPY frontend ./frontend
 
 RUN pip install --no-cache-dir -e ".[web,llm]"
 
