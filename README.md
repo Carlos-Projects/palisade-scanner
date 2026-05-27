@@ -230,6 +230,14 @@ MCPGuard            →  Runtime security proxy for MCP/A2A protocols.
 - [MCPscop](https://github.com/Carlos-Projects/mcpscope) — Unified security dashboard for MCP/A2A scanner results
 - [MCPGuard](https://github.com/Carlos-Projects/mcpguard) — Runtime security proxy for MCP/A2A protocols
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+
+## Security
+
+Found a vulnerability? See [SECURITY.md](SECURITY.md).
+
 ## License
 
 MIT
