@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![CI](https://github.com/Carlos-Projects/palisade-scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Carlos-Projects/palisade-scanner/actions)
 [![HuggingFace Space](https://img.shields.io/badge/🤗%20Try%20it%20now-HF%20Spaces-yellow)](https://huggingface.co/spaces/Syntho/palisade-scanner)
+[![Star History](https://img.shields.io/badge/Star-History-blue?style=social)](https://api.star-history.com/svg?repos=Carlos-Projects/palisade-scanner&type=Date)
 
 **[Try it live on HuggingFace Spaces](https://huggingface.co/spaces/Syntho/palisade-scanner)** — paste a URL. Detect whether it contains hidden instructions targeting AI agents.
 
