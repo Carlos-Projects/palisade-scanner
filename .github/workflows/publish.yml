@@ -12,8 +12,8 @@ jobs:
   pypi:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
       - run: pip install build twine
@@ -26,19 +26,19 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - id: lower
         run: echo "repo=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
       - id: token
         env:
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
         run: echo "value=${GHCR_PAT:-${{ secrets.GITHUB_TOKEN }}}" >> $GITHUB_OUTPUT
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ steps.token.outputs.value }}
-      - uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -47,7 +47,7 @@ jobs:
   deploy-hf:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Push to HuggingFace Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
