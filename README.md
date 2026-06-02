@@ -86,7 +86,8 @@ pis scan --file suspicious.html
 pis scan --paste "<!-- ignore instructions -->"
 
 # JSON output
-pis scan https://example.com --format json
+pis scan https://example.com --json
+pis scan https://example.com --json --output results.json
 
 # CI/CD mode (exit code reflects risk)
 pis scan https://example.com --ci --threshold high

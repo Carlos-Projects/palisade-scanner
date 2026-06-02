@@ -30,6 +30,7 @@ def scan(
     file: str = typer.Option(None, "--file", "-f", help="Local file to scan"),
     paste: str = typer.Option(None, "--paste", "-p", help="Raw text to scan"),
     format: str = typer.Option("rich", "--format", help="Output format: rich, json, markdown, simple"),
+    json_output: bool = typer.Option(False, "--json", help="Output scan results as JSON"),
     output: str = typer.Option(None, "--output", "-o", help="Save output to file"),
     ci: bool = typer.Option(False, "--ci", help="CI mode: exit code reflects risk"),
     threshold: str = typer.Option("high", "--threshold", help="CI failure threshold: low, medium, high, critical"),
@@ -61,10 +62,12 @@ def scan(
 
     report = asyncio.run(run())
 
-    if output:
+    selected_format = "json" if json_output else format
+
+    if output and not json_output:
         ext = Path(output).suffix.lower()
         format_map = {".json": "json", ".md": "markdown", ".html": "html"}
-        format = format_map.get(ext, format)
+        selected_format = format_map.get(ext, selected_format)
 
     reporter_map = {
         "json": JSONReporter(),
@@ -72,17 +75,17 @@ def scan(
         "simple": SimpleReporter(),
     }
 
-    if format == "rich":
+    if selected_format == "rich":
         _display_rich(report, verbose)
-    elif format in reporter_map:
-        text = reporter_map[format].render(report)
+    elif selected_format in reporter_map:
+        text = reporter_map[selected_format].render(report)
         if output:
             Path(output).write_text(text)
             console.print(f"[green]Output saved to[/] {output}")
         else:
             print(text)
     else:
-        console.print(f"[red]Unknown format:[/] {format}")
+        console.print(f"[red]Unknown format:[/] {selected_format}")
         raise typer.Exit(1)
 
     if reputation and url:
