@@ -6,6 +6,7 @@ from scanner.detectors.image_stego import ImageStegoDetector
 from scanner.detectors.injection_patterns import InjectionPatternMatcher
 from scanner.detectors.instruction_classifier import InstructionClassifier
 from scanner.detectors.metadata_analyzer import MetadataAnalyzer
+from scanner.detectors.pdf_content_extractor import PDFContentExtractor
 from scanner.detectors.stego_markers import StegoMarkersDetector
 from scanner.detectors.unicode_adv import AdvancedUnicodeDetector
 
@@ -24,6 +25,7 @@ def default_detectors(
         StegoMarkersDetector(),
         EntropyAnalyzer(),
         ImageStegoDetector(),
+        PDFContentExtractor(),
         InstructionClassifier(
             provider=llm_provider,
             model=llm_model,
