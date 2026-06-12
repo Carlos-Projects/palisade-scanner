@@ -12,13 +12,12 @@ from scanner.detectors.base import BaseDetector
 from scanner.detectors.injection_patterns import InjectionPatternMatcher
 from scanner.detectors.unicode_adv import AdvancedUnicodeDetector
 from scanner.domain.models import Finding
-from scanner.utils.pdf import extract_text_from_pdf_bytes
 
 
-class LinkedPDFDetector(BaseDetector):
+class PDFContentExtractor(BaseDetector):
     """Detects prompt injection and hidden instructions inside linked PDF files."""
 
-    name = "linked_pdf"
+    name = "pdf_content_extractor"
 
     async def detect(self, soup: BeautifulSoup, source_url: str = "") -> list[Finding]:
         findings: list[Finding] = []
@@ -31,7 +30,7 @@ class LinkedPDFDetector(BaseDetector):
             if not pdf_data:
                 continue
 
-            text = extract_text_from_pdf_bytes(pdf_data)
+            text = self._extract_text_from_pdf_bytes(pdf_data)
             if not text.strip():
                 continue
 
@@ -57,6 +56,30 @@ class LinkedPDFDetector(BaseDetector):
                 findings.append(f)
 
         return findings
+
+    def _extract_text_from_pdf_bytes(self, pdf_bytes: bytes) -> str:
+        """Extracts text from a PDF byte array using PyMuPDF."""
+        try:
+            import fitz  # PyMuPDF
+        except ImportError:
+            return ""
+
+        try:
+            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+            if doc.is_encrypted:
+                # Try to decrypt with empty password
+                if not doc.authenticate(""):
+                    doc.close()
+                    return ""
+
+            text_parts = []
+            for page in doc:
+                text_parts.append(page.get_text())
+
+            doc.close()
+            return "\n".join(text_parts)
+        except Exception:
+            return ""
 
     def _load_pdf_data(self, src: str, base_url: str) -> bytes | None:
         """Load PDF data from various sources."""

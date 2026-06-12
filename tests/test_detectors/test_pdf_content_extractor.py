@@ -1,8 +1,7 @@
 import pytest
 from bs4 import BeautifulSoup
 
-from scanner.detectors.pdf_analyzer import LinkedPDFDetector
-from scanner.utils.pdf import extract_text_from_pdf_bytes
+from scanner.detectors.pdf_content_extractor import PDFContentExtractor
 
 try:
     import fitz
@@ -35,23 +34,26 @@ def encrypted_pdf_bytes():
 
 
 def test_extract_text_from_pdf_bytes(sample_pdf_bytes):
-    text = extract_text_from_pdf_bytes(sample_pdf_bytes)
+    detector = PDFContentExtractor()
+    text = detector._extract_text_from_pdf_bytes(sample_pdf_bytes)
     assert "ignore all previous instructions" in text
 
 
 def test_extract_text_malformed():
-    text = extract_text_from_pdf_bytes(b"not a pdf file")
+    detector = PDFContentExtractor()
+    text = detector._extract_text_from_pdf_bytes(b"not a pdf file")
     assert text == ""
 
 
 def test_extract_text_encrypted(encrypted_pdf_bytes):
-    text = extract_text_from_pdf_bytes(encrypted_pdf_bytes)
+    detector = PDFContentExtractor()
+    text = detector._extract_text_from_pdf_bytes(encrypted_pdf_bytes)
     assert text == ""
 
 
 @pytest.mark.asyncio
-async def test_linked_pdf_detector(sample_pdf_bytes, monkeypatch):
-    detector = LinkedPDFDetector()
+async def test_pdf_content_extractor(sample_pdf_bytes, monkeypatch):
+    detector = PDFContentExtractor()
 
     # Mock _load_pdf_data to return our sample_pdf_bytes when a PDF is linked
     def mock_load(href, base_url):
@@ -76,8 +78,8 @@ async def test_linked_pdf_detector(sample_pdf_bytes, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_linked_pdf_detector_no_links(monkeypatch):
-    detector = LinkedPDFDetector()
+async def test_pdf_content_extractor_no_links(monkeypatch):
+    detector = PDFContentExtractor()
     html = '<html><body><a href="test.html">Link</a></body></html>'
     soup = BeautifulSoup(html, "lxml")
     findings = await detector.detect(soup, "http://example.com")
@@ -85,8 +87,8 @@ async def test_linked_pdf_detector_no_links(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_linked_pdf_detector_malformed_pdf(monkeypatch):
-    detector = LinkedPDFDetector()
+async def test_pdf_content_extractor_malformed_pdf(monkeypatch):
+    detector = PDFContentExtractor()
 
     def mock_load(href, base_url):
         return b"not a pdf"
